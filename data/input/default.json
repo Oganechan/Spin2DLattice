@@ -1,12 +1,11 @@
 {
     "lattice": {
-        "linear_size": 1,
+        "linear_size": 10,
         "num_shells": 1,
-        "num_positions": 1,
-        "norm_a": 1,
-        "norm_b": 1,
-        "crystal_type": "square",
-        "boundary_conditions": "periodic"
+        "norm_a": 1.0,
+        "norm_b": 1.0,
+        "crystal": "rectangular",
+        "boundary": "periodic"
     },
     "simulation": {
         "initial_concentration": 0.0,
