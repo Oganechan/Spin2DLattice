@@ -15,7 +15,7 @@ public:
     void load(const std::string &filepath);
 
     template <typename T>
-    T get(const std::string &key, const T &default_value = T())
+    T get(const std::string &key, const T &default_value = T()) const
     {
         std::shared_lock lock(mutex_);
 
