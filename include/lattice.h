@@ -2,6 +2,7 @@
 
 #include <array>
 #include <vector>
+#include <cstdint>
 #include <cmath>
 #include "config.h"
 #include "random.h"
@@ -12,11 +13,12 @@ public:
     enum class CrystalType
     {
         RECTANGULAR,
+        C_RECTANGULAR,
         TRIANGULAR,
         HONEYCOMB,
         KAGOME,
-        LIEB,
-        CHECKERBOARD
+        LIEB
+
     };
     enum class BoundaryType
     {
@@ -25,37 +27,45 @@ public:
     };
 
     explicit Lattice(const Config &config)
-        : linear_size_(config.get<size_t>("lattice.linear_size")),
-          num_shells_(config.get<size_t>("lattice.num_shells")),
+        : linear_size_(config.get<int32_t>("lattice.linear_size", 10)),
+          num_shells_(config.get<int32_t>("lattice.num_shells", 1)),
           norm_a_(config.get<double>("lattice.norm_a", 1.0)),
           norm_b_(config.get<double>("lattice.norm_b", 1.0)),
           crystal_type_(parse_crystal_type(config.get<std::string>("lattice.crystal", "rectangular"))),
           boundary_conditions_(parse_boundary_type(config.get<std::string>("lattice.boundary", "periodic")))
     {
         initialize();
-        cached_neighbors_ = generate_neighbors();
+        precomp_indexes();
+        precomp_coordinates();
+        precomp_neighbors();
     }
 
 private:
-    const size_t linear_size_, num_shells_;
-    size_t num_positions_, num_atoms_;
+    const int32_t linear_size_, num_shells_;
+    int32_t num_positions_, num_atoms_;
     const double norm_a_, norm_b_;
+    double translation_ax_, translation_ay_, translation_bx_, translation_by_;
 
     const CrystalType crystal_type_;
-    static CrystalType parse_crystal_type(const std::string &crystal);
-
     const BoundaryType boundary_conditions_;
-    static BoundaryType parse_boundary_type(const std::string &boundary);
 
     std::vector<std::array<double, 2>> basis_;
     std::vector<std::array<double, 2>> translation_;
-    std::vector<std::array<size_t, 3>> indexes_;
+    std::vector<std::array<int32_t, 3>> indexes_;
+    std::vector<std::array<double, 2>> coordinates_;
+    std::vector<std::array<int32_t, 3>> connections_;
+    std::vector<std::vector<std::vector<int32_t>>> neighbors_;
 
-    mutable std::vector<std::vector<std::vector<size_t>>> cached_neighbors_;
-    std::vector<std::vector<std::vector<size_t>>> generate_neighbors() const;
+    static CrystalType parse_crystal_type(const std::string &crystal);
+    static BoundaryType parse_boundary_type(const std::string &boundary);
+
+    std::array<int32_t, 3> expand_idx(const int32_t idx);
+    int32_t collapse_idx(const int32_t i, const int32_t j, const int32_t pos);
+    std::array<double, 2> calculate_coordinate(int32_t idx);
+    double calculate_distance(int32_t first_idx, int32_t second_idx);
 
     void initialize();
-
-    std::array<size_t, 3> expand_idx(const size_t idx);
-    size_t collapse_idx(const int i, const int j, const size_t pos);
+    void precomp_indexes();
+    void precomp_coordinates();
+    void precomp_neighbors();
 };
