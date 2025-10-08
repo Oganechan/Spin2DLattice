@@ -160,6 +160,21 @@ void Lattice::initialize()
     translation_by_ = translation_[1][1] * linear_size_;
 }
 
+void Lattice::validate_parameters() const
+{
+    const double lattice_diagonal = std::sqrt(translation_ax_ * translation_ax_ + translation_by_ * translation_by_);
+    const double max_possible_distance = (boundary_conditions_ == BoundaryType::PERIODIC)
+                                             ? lattice_diagonal / 2.0
+                                             : lattice_diagonal;
+
+    if (static_cast<double>(num_shells_) > max_possible_distance)
+        throw std::invalid_argument("Number of shells (" +
+                                    std::to_string(num_shells_) +
+                                    ") exceeds maximum possible distance (" +
+                                    std::to_string(max_possible_distance) +
+                                    ") in the lattice");
+}
+
 void Lattice::precomp_indexes()
 {
     indexes_.resize(num_atoms_);

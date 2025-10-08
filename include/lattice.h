@@ -35,6 +35,7 @@ public:
           boundary_conditions_(parse_boundary_type(config.get<std::string>("lattice.boundary", "periodic")))
     {
         initialize();
+        validate_parameters();
         precomp_indexes();
         precomp_coordinates();
         precomp_neighbors();
@@ -78,6 +79,7 @@ private:
     static BoundaryType parse_boundary_type(const std::string &boundary);
 
     void initialize();
+    void validate_parameters() const;
     void precomp_indexes();
     void precomp_coordinates();
     void precomp_neighbors();
