@@ -27,7 +27,7 @@ Lattice::BoundaryType Lattice::parse_boundary_type(const std::string &boundary)
     throw std::invalid_argument("Unknown boundary type: " + boundary);
 }
 
-std::array<int32_t, 3> Lattice::expand_idx(const int32_t idx)
+std::array<int32_t, 3> Lattice::expand_idx(const int32_t idx) const
 {
     int32_t pos = idx % num_positions_;
     int32_t q = idx / num_positions_;
@@ -37,7 +37,7 @@ std::array<int32_t, 3> Lattice::expand_idx(const int32_t idx)
     return {i, j, pos};
 }
 
-int32_t Lattice::collapse_idx(const int32_t i, const int32_t j, const int32_t pos)
+int32_t Lattice::collapse_idx(const int32_t i, const int32_t j, const int32_t pos) const
 {
     int32_t taco_i = (i % linear_size_ + linear_size_) % linear_size_;
     int32_t taco_j = (j % linear_size_ + linear_size_) % linear_size_;
@@ -45,7 +45,7 @@ int32_t Lattice::collapse_idx(const int32_t i, const int32_t j, const int32_t po
     return (taco_i + taco_j * linear_size_) * num_positions_ + pos;
 }
 
-std::array<double, 2> Lattice::calculate_coordinate(int32_t idx)
+std::array<double, 2> Lattice::calculate_coordinate(int32_t idx) const
 {
     auto [i, j, pos] = indexes_[idx];
     double x = i * translation_[0][0] + j * translation_[1][0] + basis_[pos][0];
@@ -54,17 +54,18 @@ std::array<double, 2> Lattice::calculate_coordinate(int32_t idx)
     return {x, y};
 }
 
-double Lattice::calculate_distance(int32_t first_idx, int32_t second_idx)
+double Lattice::calculate_distance(int32_t first_idx, int32_t second_idx) const
 {
+    if (first_idx < 0 || first_idx >= num_atoms_ || second_idx < 0 || second_idx >= num_atoms_)
+        throw std::out_of_range("Atom index out of range in calculate_distance");
+
     if (first_idx == second_idx)
         return 0.0;
 
     const double delta_x = coordinates_[second_idx][0] - coordinates_[first_idx][0];
     const double delta_y = coordinates_[second_idx][1] - coordinates_[first_idx][1];
 
-    switch (boundary_conditions_)
-    {
-    case BoundaryType::PERIODIC:
+    if (boundary_conditions_ == BoundaryType::PERIODIC)
     {
         double min_distance_sq = std::numeric_limits<double>::max();
         for (int32_t n = -1; n <= 1; ++n)
@@ -81,8 +82,8 @@ double Lattice::calculate_distance(int32_t first_idx, int32_t second_idx)
         }
         return std::sqrt(min_distance_sq);
     }
-
-    case BoundaryType::HARD:
+    else
+    {
         return std::sqrt(delta_x * delta_x + delta_y * delta_y);
     }
 }
