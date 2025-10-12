@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../include/lattice.h"
+#include "../include/lattice/geometry.h"
 
 void print_neighbors_indexes(const Lattice &lattice)
 {
