@@ -4,8 +4,7 @@
 #include <vector>
 #include <cstdint>
 #include <cmath>
-#include "config.h"
-#include "random.h"
+#include "../core/config.h"
 
 class Lattice
 {

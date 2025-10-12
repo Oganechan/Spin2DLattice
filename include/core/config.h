@@ -5,7 +5,7 @@
 #include <shared_mutex>
 #include <fstream>
 #include <stdexcept>
-#include "../external/nlohmann/json.hpp"
+#include "../../external/nlohmann/json.hpp"
 
 using json = nlohmann::json;
 

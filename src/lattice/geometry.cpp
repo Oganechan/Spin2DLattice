@@ -1,4 +1,4 @@
-#include "../include/lattice.h"
+#include "../../include/lattice/geometry.h"
 
 Lattice::CrystalType Lattice::parse_crystal_type(const std::string &crystal)
 {
