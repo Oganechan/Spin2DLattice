@@ -72,8 +72,8 @@ double Lattice::calculate_distance(int32_t first_idx, int32_t second_idx) const
         {
             for (int32_t m = -1; m <= 1; ++m)
             {
-                const double taco_dx = n * translation_ax_ + m * translation_ay_ + delta_x;
-                const double taco_dy = n * translation_bx_ + m * translation_by_ + delta_y;
+                const double taco_dx = (n * translation_[0][0] + m * translation_[1][0]) * linear_size_ + delta_x;
+                const double taco_dy = (n * translation_[0][1] + m * translation_[1][1]) * linear_size_ + delta_y;
                 const double distance_sq = taco_dx * taco_dx + taco_dy * taco_dy;
 
                 if (distance_sq < min_distance_sq)
@@ -152,27 +152,39 @@ void Lattice::initialize()
             {0.0, norm_b_}};
         break;
     }
-    num_atoms_ = linear_size_ * linear_size_ * num_positions_;
 
-    translation_ax_ = translation_[0][0] * linear_size_;
-    translation_ay_ = translation_[0][1] * linear_size_;
-    translation_bx_ = translation_[1][0] * linear_size_;
-    translation_by_ = translation_[1][1] * linear_size_;
+    num_atoms_ = linear_size_ * linear_size_ * num_positions_;
 }
 
 void Lattice::validate_parameters() const
 {
-    const double lattice_diagonal = std::sqrt(translation_ax_ * translation_ax_ + translation_by_ * translation_by_);
-    const double max_possible_distance = (boundary_conditions_ == BoundaryType::PERIODIC)
-                                             ? lattice_diagonal / 2.0
-                                             : lattice_diagonal;
+    if (linear_size_ <= 0)
+        throw std::invalid_argument("Linear size must be positive, got: " + std::to_string(linear_size_));
 
-    if (static_cast<double>(num_shells_) > max_possible_distance)
-        throw std::invalid_argument("Number of shells (" +
-                                    std::to_string(num_shells_) +
-                                    ") exceeds maximum possible distance (" +
-                                    std::to_string(max_possible_distance) +
-                                    ") in the lattice");
+    if (num_shells_ <= 0)
+        throw std::invalid_argument("Number of shells must be positive, got: " + std::to_string(num_shells_));
+
+    if (norm_a_ <= 0 || norm_b_ <= 0)
+        throw std::invalid_argument("Lattice constants must be positive, got norm_a: " +
+                                    std::to_string(norm_a_) + ", norm_b: " + std::to_string(norm_b_));
+
+    if (translation_.empty() || translation_.size() != 2)
+        throw std::runtime_error("Translation vectors not properly initialized");
+
+    const double total_system_x = (std::abs(translation_[0][0]) + std::abs(translation_[1][0])) * linear_size_;
+    const double total_system_y = (std::abs(translation_[0][1]) + std::abs(translation_[1][1])) * linear_size_;
+
+    const double max_system_distance = (boundary_conditions_ == BoundaryType::PERIODIC)
+                                           ? std::sqrt(total_system_x * total_system_x + total_system_y * total_system_y) / 2.0
+                                           : std::sqrt(total_system_x * total_system_x + total_system_y * total_system_y);
+
+    if (static_cast<double>(num_shells_) > max_system_distance)
+        throw std::invalid_argument(
+            "Search radius (" + std::to_string(num_shells_) +
+            ") exceeds system size (" + std::to_string(max_system_distance) +
+            "). shells: " + std::to_string(num_shells_) +
+            ", min_distance: " + std::to_string(num_shells_) +
+            ", linear_size: " + std::to_string(linear_size_));
 }
 
 void Lattice::precomp_indexes()
@@ -192,48 +204,39 @@ void Lattice::precomp_coordinates()
 void Lattice::precomp_neighbors()
 {
     neighbors_.resize(num_atoms_);
-    for (int32_t i = 0; i < num_atoms_; ++i)
-        neighbors_[i].resize(num_shells_);
+    for (auto &atom_neighbors : neighbors_)
+        atom_neighbors.resize(num_shells_);
 
-    std::vector<bool> atom_visited(num_atoms_, false);
+    std::vector<std::pair<int32_t, int32_t>> displacements;
+    for (int32_t di = -num_shells_; di <= num_shells_; ++di)
+        for (int32_t dj = -num_shells_; dj <= num_shells_; ++dj)
+            if (di * di + dj * dj <= num_shells_ * num_shells_)
+                displacements.emplace_back(di, dj);
 
     for (int32_t atom_idx = 0; atom_idx < num_atoms_; ++atom_idx)
     {
-        std::fill(atom_visited.begin(), atom_visited.end(), false);
-        atom_visited[atom_idx] = true;
-
         std::vector<std::pair<int32_t, double>> atom_neighbors;
 
-        for (int32_t di = -num_shells_; di <= num_shells_; ++di)
+        auto [i, j, pos] = indexes_[atom_idx];
+
+        for (const auto &[di, dj] : displacements)
         {
-            for (int32_t dj = -num_shells_; dj <= num_shells_; ++dj)
+            for (int32_t new_pos = 0; new_pos < num_positions_; ++new_pos)
             {
-                if (di * di + dj * dj > num_shells_ * num_shells_)
+                int32_t neighbor_idx = collapse_idx(i + di, j + dj, new_pos);
+
+                if (neighbor_idx < 0 || neighbor_idx >= num_atoms_ || neighbor_idx == atom_idx)
                     continue;
 
-                auto [i, j, pos] = indexes_[atom_idx];
-
-                for (int32_t new_pos = 0; new_pos < num_positions_; ++new_pos)
+                if (boundary_conditions_ == BoundaryType::HARD)
                 {
-                    int32_t neighbor_idx = collapse_idx(i + di, j + dj, new_pos);
-
-                    if (neighbor_idx < 0 || neighbor_idx >= num_atoms_)
+                    auto [ni, nj, npos] = indexes_[neighbor_idx];
+                    if (ni < 0 || ni >= linear_size_ || nj < 0 || nj > linear_size_)
                         continue;
-                    if (atom_visited[neighbor_idx])
-                        continue;
-                    if (neighbor_idx == atom_idx)
-                        continue;
-                    if (boundary_conditions_ == BoundaryType::HARD)
-                    {
-                        auto [ni, nj, npos] = indexes_[neighbor_idx];
-                        if (ni < 0 || ni >= linear_size_ || nj < 0 || nj >= linear_size_)
-                            continue;
-                    }
-
-                    atom_visited[neighbor_idx] = true;
-                    double distance = calculate_distance(atom_idx, neighbor_idx);
-                    atom_neighbors.emplace_back(neighbor_idx, distance);
                 }
+
+                double distance = calculate_distance(atom_idx, neighbor_idx);
+                atom_neighbors.emplace_back(neighbor_idx, distance);
             }
         }
 
@@ -248,7 +251,7 @@ void Lattice::precomp_neighbors()
 
         for (const auto &[neighbor_idx, distance] : atom_neighbors)
         {
-            if (std::abs(distance - current_distance) > 1e-5)
+            if (std::abs(distance - current_distance) > 1e-5 * current_distance)
             {
                 current_distance = distance;
                 current_shell++;

@@ -26,12 +26,12 @@ public:
     };
 
     explicit Lattice(const Config &config)
-        : linear_size_(config.get<int32_t>("lattice.linear_size", 10)),
-          num_shells_(config.get<int32_t>("lattice.num_shells", 1)),
-          norm_a_(config.get<double>("lattice.norm_a", 1.0)),
-          norm_b_(config.get<double>("lattice.norm_b", 1.0)),
-          crystal_type_(parse_crystal_type(config.get<std::string>("lattice.crystal", "rectangular"))),
-          boundary_conditions_(parse_boundary_type(config.get<std::string>("lattice.boundary", "periodic")))
+        : linear_size_(config.get<int32_t>("lattice.linear_size")),
+          num_shells_(config.get<std::vector<double>>("system.exchange_interaction").size()),
+          norm_a_(config.get<double>("lattice.norm_a")),
+          norm_b_(config.get<double>("lattice.norm_b")),
+          crystal_type_(parse_crystal_type(config.get<std::string>("lattice.crystal"))),
+          boundary_conditions_(parse_boundary_type(config.get<std::string>("lattice.boundary")))
     {
         initialize();
         validate_parameters();
@@ -62,7 +62,6 @@ private:
     const int32_t linear_size_, num_shells_;
     int32_t num_positions_, num_atoms_;
     const double norm_a_, norm_b_;
-    double translation_ax_, translation_ay_, translation_bx_, translation_by_;
 
     const CrystalType crystal_type_;
     const BoundaryType boundary_conditions_;
@@ -71,7 +70,6 @@ private:
     std::vector<std::array<double, 2>> translation_;
     std::vector<std::array<int32_t, 3>> indexes_;
     std::vector<std::array<double, 2>> coordinates_;
-    std::vector<std::array<int32_t, 3>> connections_;
     std::vector<std::vector<std::vector<int32_t>>> neighbors_;
 
     static CrystalType parse_crystal_type(const std::string &crystal);

@@ -1,7 +1,6 @@
 {
     "lattice": {
         "linear_size": 10,
-        "num_shells": 1,
         "norm_a": 1.0,
         "norm_b": 1.0,
         "crystal": "rectangular",
@@ -18,6 +17,9 @@
     "system": {
         "temperature": 0.1,
         "external_field": 0.0,
-        "exchange_interaction": 1.0
+        "exchange_interaction": [
+            1.0,
+            0.5
+        ]
     }
 }
