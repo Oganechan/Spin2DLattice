@@ -32,9 +32,11 @@ int main()
     Config config;
 
     config.set("lattice.linear_size", 10);
-    config.set("lattice.num_shells", 3);
+    config.set("lattice.norm_a", 1.0);
+    config.set("lattice.norm_b", 1.0);
     config.set("lattice.crystal", "rectangular");
     config.set("lattice.boundary", "periodic");
+    config.set("system.exchange_interaction", std::vector<double>{1.0, 0.25});
 
     Lattice lattice(config);
     print_neighbors_indexes(lattice);
