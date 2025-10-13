@@ -11,8 +11,23 @@ using json = nlohmann::json;
 
 class Config
 {
+private:
+    mutable std::shared_mutex mutex_;
+    json config_ = json::object();
+
 public:
-    void load(const std::string &filepath);
+    void load(const std::string &filepath)
+    {
+        std::unique_lock lock(mutex_);
+        json new_config;
+
+        std::ifstream file(filepath);
+        if (!file.is_open())
+            throw std::runtime_error("Config file not found: " + filepath);
+        file >> new_config;
+
+        config_ = std::move(new_config);
+    }
 
     template <typename T>
     T get(const std::string &key, const T &default_value = T()) const
@@ -56,8 +71,4 @@ public:
         }
         (*current)[k] = value;
     }
-
-private:
-    mutable std::shared_mutex mutex_;
-    json config_ = json::object();
 };
