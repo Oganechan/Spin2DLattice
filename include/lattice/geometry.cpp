@@ -1,6 +1,21 @@
-#include "../../include/lattice/geometry.h"
+#include "geometry.h"
 
-Lattice::CrystalType Lattice::parse_crystal_type(const std::string &crystal)
+lattice::Geometry::Geometry(const Config &config)
+    : linear_size_(config.get<int32_t>("lattice.linear_size")),
+      num_shells_(config.get<std::vector<double>>("system.exchange_interaction").size()),
+      norm_a_(config.get<double>("lattice.norm_a")),
+      norm_b_(config.get<double>("lattice.norm_b")),
+      crystal_type_(parse_crystal_type(config.get<std::string>("lattice.crystal"))),
+      boundary_conditions_(parse_boundary_type(config.get<std::string>("lattice.boundary")))
+{
+    initialize();
+    validate_parameters();
+    precomp_indexes();
+    precomp_coordinates();
+    precomp_neighbors();
+}
+
+lattice::CrystalType lattice::Geometry::parse_crystal_type(const std::string &crystal)
 {
     static const std::unordered_map<std::string, CrystalType> mapping = {
         {"rectangular", CrystalType::RECTANGULAR},
@@ -16,7 +31,7 @@ Lattice::CrystalType Lattice::parse_crystal_type(const std::string &crystal)
     throw std::invalid_argument("Unknown crystal type: " + crystal);
 }
 
-Lattice::BoundaryType Lattice::parse_boundary_type(const std::string &boundary)
+lattice::BoundaryType lattice::Geometry::parse_boundary_type(const std::string &boundary)
 {
     static const std::unordered_map<std::string, BoundaryType> mapping = {
         {"periodic", BoundaryType::PERIODIC},
@@ -26,8 +41,7 @@ Lattice::BoundaryType Lattice::parse_boundary_type(const std::string &boundary)
         return it->second;
     throw std::invalid_argument("Unknown boundary type: " + boundary);
 }
-
-std::array<int32_t, 3> Lattice::expand_idx(const int32_t idx) const
+std::array<int32_t, 3> lattice::Geometry::expand_idx(const int32_t idx) const
 {
     int32_t pos = idx % num_positions_;
     int32_t q = idx / num_positions_;
@@ -37,7 +51,7 @@ std::array<int32_t, 3> Lattice::expand_idx(const int32_t idx) const
     return {i, j, pos};
 }
 
-int32_t Lattice::collapse_idx(const int32_t i, const int32_t j, const int32_t pos) const
+int32_t lattice::Geometry::collapse_idx(const int32_t i, const int32_t j, const int32_t pos) const
 {
     int32_t taco_i = (i % linear_size_ + linear_size_) % linear_size_;
     int32_t taco_j = (j % linear_size_ + linear_size_) % linear_size_;
@@ -45,7 +59,7 @@ int32_t Lattice::collapse_idx(const int32_t i, const int32_t j, const int32_t po
     return (taco_i + taco_j * linear_size_) * num_positions_ + pos;
 }
 
-std::array<double, 2> Lattice::calculate_coordinate(int32_t idx) const
+std::array<double, 2> lattice::Geometry::calculate_coordinate(int32_t idx) const
 {
     auto [i, j, pos] = indexes_[idx];
     double x = i * translation_[0][0] + j * translation_[1][0] + basis_[pos][0];
@@ -54,7 +68,7 @@ std::array<double, 2> Lattice::calculate_coordinate(int32_t idx) const
     return {x, y};
 }
 
-double Lattice::calculate_distance(int32_t first_idx, int32_t second_idx) const
+double lattice::Geometry::calculate_distance(int32_t first_idx, int32_t second_idx) const
 {
     if (first_idx < 0 || first_idx >= num_atoms_ || second_idx < 0 || second_idx >= num_atoms_)
         throw std::out_of_range("Atom index out of range in calculate_distance");
@@ -88,7 +102,7 @@ double Lattice::calculate_distance(int32_t first_idx, int32_t second_idx) const
     }
 }
 
-void Lattice::initialize()
+void lattice::Geometry::initialize()
 {
     const double SQRT3_2 = std::sqrt(3.0) / 2.0;
 
@@ -156,7 +170,7 @@ void Lattice::initialize()
     num_atoms_ = linear_size_ * linear_size_ * num_positions_;
 }
 
-void Lattice::validate_parameters() const
+void lattice::Geometry::validate_parameters() const
 {
     if (linear_size_ <= 0)
         throw std::invalid_argument("Linear size must be positive, got: " + std::to_string(linear_size_));
@@ -187,21 +201,21 @@ void Lattice::validate_parameters() const
             ", linear_size: " + std::to_string(linear_size_));
 }
 
-void Lattice::precomp_indexes()
+void lattice::Geometry::precomp_indexes()
 {
     indexes_.resize(num_atoms_);
     for (int32_t i = 0; i < num_atoms_; ++i)
         indexes_[i] = expand_idx(i);
 }
 
-void Lattice::precomp_coordinates()
+void lattice::Geometry::precomp_coordinates()
 {
     coordinates_.resize(num_atoms_);
     for (int32_t i = 0; i < num_atoms_; ++i)
         coordinates_[i] = calculate_coordinate(i);
 }
 
-void Lattice::precomp_neighbors()
+void lattice::Geometry::precomp_neighbors()
 {
     neighbors_.resize(num_atoms_);
     for (auto &atom_neighbors : neighbors_)
