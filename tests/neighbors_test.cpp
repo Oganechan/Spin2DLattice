@@ -1,11 +1,11 @@
 #include <iostream>
 #include "../include/lattice/geometry.h"
 
-void print_neighbors_indexes(const Lattice &lattice)
+void print_neighbors_indexes(const lattice::Geometry &geometry)
 {
-    const auto &neighbors = lattice.get_neighbors();
-    const int32_t num_atoms = lattice.get_num_atoms();
-    const int32_t num_shells = lattice.get_num_shells();
+    const auto &neighbors = geometry.get_neighbors();
+    const int32_t num_atoms = geometry.get_num_atoms();
+    const int32_t num_shells = geometry.get_num_shells();
 
     for (int32_t atom_idx = 0; atom_idx < num_atoms; ++atom_idx)
     {
@@ -38,6 +38,6 @@ int main()
     config.set("lattice.boundary", "periodic");
     config.set("system.exchange_interaction", std::vector<double>{1.0, 0.25});
 
-    Lattice lattice(config);
-    print_neighbors_indexes(lattice);
+    lattice::Geometry geometry(config);
+    print_neighbors_indexes(geometry);
 }
