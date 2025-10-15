@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../include/lattice/geometry.h"
+#include "../include/lattice/atoms.h"
 
 void print_neighbors_indexes(const lattice::Geometry &geometry)
 {
@@ -34,10 +34,12 @@ int main()
     config.set("lattice.linear_size", 10);
     config.set("lattice.norm_a", 1.0);
     config.set("lattice.norm_b", 1.0);
-    config.set("lattice.crystal", "rectangular");
-    config.set("lattice.boundary", "periodic");
-    config.set("system.exchange_interaction", std::vector<double>{1.0, 0.25});
+    config.set("lattice.crystal_type", "rectangular");
+    config.set("lattice.boundary_conditions", "periodic");
+    config.set("physical.exchange_interaction", std::vector<double>{1.0, 0.25});
+    config.set("physical.spin_model", "ising");
 
-    lattice::Geometry geometry(config);
+    lattice::Atoms atoms(config);
+    lattice::Geometry geometry = atoms.geometry();
     print_neighbors_indexes(geometry);
 }
