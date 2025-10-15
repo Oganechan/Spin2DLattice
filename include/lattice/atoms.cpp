@@ -1,78 +1,51 @@
-#include "../../include/lattice/atoms.h"
+#include "atoms.h"
 
-void Atoms::set_spin(int32_t index, int32_t spin)
+lattice::Atoms::Atoms(const Config &config)
+    : config_(config)
 {
-    if (index < 0 || index >= num_atoms_)
-        throw std::invalid_argument("Index is out of range num_atoms");
-
-    if (spin < -1 || spin > 1)
-        throw std::invalid_argument("Spin can be only -1, 0 or 1");
-
-    spins_[index] = spin;
+    initialize_geometry();
+    initialize_model();
 }
 
-void Atoms::set_paramagnetic(int32_t index)
+lattice::SpinModel lattice::Atoms::parse_model_type(const std::string &model_type_str)
 {
-    if (index < 0 || index >= num_atoms_)
-        throw std::invalid_argument("Index is out of range num_atoms");
+    static const std::unordered_map<std::string, SpinModel> mapping = {
+        {"ising", SpinModel::ISING},
+        {"heisenberg", SpinModel::HEISENBERG},
+        {"xy", SpinModel::XY}};
 
-    spins_[index] = 0;
+    if (auto it = mapping.find(model_type_str); it != mapping.end())
+        return it->second;
+
+    throw std::invalid_argument("Unknown model type: " + model_type_str);
 }
 
-void Atoms::set_magnetic(int32_t index)
+std::unique_ptr<lattice::SpinModelBase> lattice::Atoms::create_model(SpinModel model_type)
 {
-    if (index < 0 || index >= num_atoms_)
-        throw std::invalid_argument("Index is out of range num_atoms");
-
-    std::bernoulli_distribution dist(0.5);
-    spins_[index] = dist(Random::get_rng()) ? 1 : -1;
-}
-
-void Atoms::random_initialize(double concentration)
-{
-    if (concentration < 0 || concentration > 1)
-        throw std::invalid_argument("Incorrect concentration value");
-
-    spins_.clear();
-    magnetic_indices_.clear();
-
-    std::bernoulli_distribution dist(0.5);
-    for (int32_t i = 0; i < num_atoms_; ++i)
+    switch (model_type)
     {
-        spins_.push_back(dist(Random::get_rng()) ? 1 : -1);
-        magnetic_indices_.push_back(i);
-    }
+    case SpinModel::ISING:
+        return std::make_unique<IsingModel>(*geometry_);
 
-    int32_t zero_spins_count = static_cast<int32_t>((1.0 - concentration) * static_cast<double>(num_atoms_));
-    if (zero_spins_count == 0 || magnetic_indices_.empty())
-        return;
-    for (int32_t i = 0; i < zero_spins_count && !magnetic_indices_.empty(); ++i)
-    {
-        std::uniform_int_distribution<int32_t> dist(0, magnetic_indices_.size() - 1);
-        int32_t random_index = dist(Random::get_rng());
-        spins_[magnetic_indices_[random_index]] = 0;
-        magnetic_indices_.erase(magnetic_indices_.begin() + random_index);
+    case SpinModel::HEISENBERG:
+        // return std::make_unique<HeisenbergModel>(*geometry_);
+
+    case SpinModel::XY:
+        // return std::make_unique<XYModel>(*geometry_);
+    default:
+        throw std::invalid_argument("Unknown spin model type");
     }
 }
 
-void Atoms::flip_spin(int32_t index)
+void lattice::Atoms::initialize_geometry()
 {
-    if (index < 0 || index >= num_atoms_)
-        throw std::invalid_argument("Index is out of range num_atoms");
-
-    if (!is_magnetic(index))
-        return;
-
-    spins_[index] *= -1;
+    geometry_ = std::make_unique<Geometry>(config_);
 }
 
-bool Atoms::is_magnetic(int32_t index) const
+void lattice::Atoms::initialize_model()
 {
-    if (index < 0 || index >= num_atoms_)
-        throw std::invalid_argument("Index is out of range num_atoms");
+    std::string model_type_str = config_.get<std::string>("physical.spin_model");
+    SpinModel model_type = parse_model_type(model_type_str);
 
-    if (spins_[index] == 0)
-        return false;
-    else
-        return true;
+    model_ = create_model(model_type);
 }

@@ -2,11 +2,11 @@
 
 lattice::Geometry::Geometry(const Config &config)
     : linear_size_(config.get<int32_t>("lattice.linear_size")),
-      num_shells_(config.get<std::vector<double>>("system.exchange_interaction").size()),
+      num_shells_(config.get<std::vector<double>>("physical.exchange_interaction").size()),
       norm_a_(config.get<double>("lattice.norm_a")),
       norm_b_(config.get<double>("lattice.norm_b")),
-      crystal_type_(parse_crystal_type(config.get<std::string>("lattice.crystal"))),
-      boundary_conditions_(parse_boundary_type(config.get<std::string>("lattice.boundary")))
+      crystal_type_(parse_crystal_type(config.get<std::string>("lattice.crystal_type"))),
+      boundary_conditions_(parse_boundary_type(config.get<std::string>("lattice.boundary_conditions")))
 {
     initialize();
     validate_parameters();
@@ -245,7 +245,7 @@ void lattice::Geometry::precomp_neighbors()
                 if (boundary_conditions_ == BoundaryType::HARD)
                 {
                     auto [ni, nj, npos] = indexes_[neighbor_idx];
-                    if (ni < 0 || ni >= linear_size_ || nj < 0 || nj > linear_size_)
+                    if (ni < 0 || ni >= linear_size_ || nj < 0 || nj >= linear_size_)
                         continue;
                 }
 

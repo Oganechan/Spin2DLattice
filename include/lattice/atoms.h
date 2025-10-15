@@ -1,35 +1,40 @@
 #pragma once
 
-#include "../utils/random.h"
-#include "geometry.h"
+#include "./models/ising_model.h"
+#include "./models/heisenberg_model.h"
+#include "./models/xy_model.h"
 
-class Atoms
+namespace lattice
 {
-public:
-    explicit Atoms(Lattice &lattice)
-        : num_atoms_(lattice.get_num_atoms())
+
+    class Atoms
     {
-        spins_.reserve(num_atoms_);
-        magnetic_indices_.reserve(num_atoms_);
-    }
+    public:
+        explicit Atoms(const Config &config);
 
-    void set_spin(int32_t index, int32_t spin);
-    void set_paramagnetic(int32_t index);
-    void set_magnetic(int32_t index);
+        void set_magnetic(int32_t atom_index, bool magnetic) { model_->set_magnetic(atom_index, magnetic); }
+        bool is_magnetic(int32_t atom_index) { return model_->is_magnetic(atom_index); }
+        const std::vector<bool> &get_magnetic_mask() { return model_->get_magnetic_mask(); }
+        void set_random_defects(double concentration) { model_->set_random_defects(concentration); }
+        void random_initialize() { model_->random_initialize(); }
+        void ferromagnetic_initialize() { model_->ferromagnetic_initialize(); }
+        void antiferromagnetic_initialize() { model_->antiferromagnetic_initialize(); }
+        SpinModel get_type() { return model_->get_type(); }
 
-    const std::vector<int32_t> &get_spins() const { return spins_; }
-    const std::vector<int32_t> &get_magnetic_atoms() const { return magnetic_indices_; }
-    int32_t get_spin(int32_t index) const { return spins_[index]; }
-    int32_t get_num_magnetic() const { return num_magnetic_atoms; }
+        const Geometry &geometry() const { return *geometry_; }
+        SpinModelBase &model() { return *model_; }
+        const SpinModelBase &model() const { return *model_; }
 
-    void random_initialize(double concentration);
+    private:
+        const Config &config_;
+        std::unique_ptr<Geometry> geometry_;
+        std::unique_ptr<SpinModelBase> model_;
 
-    void flip_spin(int32_t index);
-    bool is_magnetic(int32_t index) const;
+        static SpinModel parse_model_type(const std::string &model_type_str);
+        std::unique_ptr<SpinModelBase> create_model(SpinModel model_type);
 
-private:
-    const int32_t num_atoms_;
-    int32_t num_magnetic_atoms;
+        void initialize_geometry();
+        void initialize_model();
+    };
 
-    std::vector<int32_t> spins_, magnetic_indices_;
-};
+}
