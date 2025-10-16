@@ -13,7 +13,7 @@ namespace lattice
         explicit Atoms(const Config &config);
 
         void set_magnetic(int32_t atom_index, bool magnetic) { model_->set_magnetic(atom_index, magnetic); }
-        bool is_magnetic(int32_t atom_index) { return model_->is_magnetic(atom_index); }
+        bool is_magnetic(int32_t atom_index) const { return model_->is_magnetic(atom_index); }
         const std::vector<bool> &get_magnetic_mask() { return model_->get_magnetic_mask(); }
         void set_random_defects(double concentration) { model_->set_random_defects(concentration); }
         void random_initialize() { model_->random_initialize(); }

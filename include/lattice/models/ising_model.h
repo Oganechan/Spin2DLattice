@@ -44,14 +44,14 @@ namespace lattice
 
             std::fill(magnetic_mask_.begin(), magnetic_mask_.end(), true);
 
-            int32_t deffect_count = static_cast<int32_t>((1.0 - concentration) * static_cast<double>(num_atoms_));
+            int32_t defect_count = static_cast<int32_t>(concentration * static_cast<double>(num_atoms_));
 
             std::vector<int32_t> indices(num_atoms_);
             for (int32_t i = 0; i < num_atoms_; ++i)
                 indices[i] = i;
             std::shuffle(indices.begin(), indices.end(), Random::get_rng());
 
-            for (int32_t i = 0; i < deffect_count; ++i)
+            for (int32_t i = 0; i < defect_count; ++i)
                 magnetic_mask_[indices[i]] = false;
         }
 
@@ -77,7 +77,7 @@ namespace lattice
         void antiferromagnetic_initialize() override
         {
             spins_.clear();
-            spins_.reserve(num_atoms_);
+            spins_.resize(num_atoms_);
 
             for (int32_t i = 0; i < num_atoms_; ++i)
                 spins_[i] = (i % 2 == 0) ? 1 : -1;

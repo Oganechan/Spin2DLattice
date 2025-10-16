@@ -29,9 +29,12 @@ std::unique_ptr<lattice::SpinModelBase> lattice::Atoms::create_model(SpinModel m
 
     case SpinModel::HEISENBERG:
         // return std::make_unique<HeisenbergModel>(*geometry_);
+        throw;
 
     case SpinModel::XY:
         // return std::make_unique<XYModel>(*geometry_);
+        throw;
+
     default:
         throw std::invalid_argument("Unknown spin model type");
     }
