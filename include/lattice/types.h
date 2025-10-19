@@ -6,8 +6,7 @@ namespace lattice
     enum class SpinModel
     {
         ISING,
-        HEISENBERG,
-        XY
+        HEISENBERG
     };
 
     enum class CrystalType
@@ -27,4 +26,4 @@ namespace lattice
         HARD
     };
 
-}
+} // namespace lattice

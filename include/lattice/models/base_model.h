@@ -1,39 +1,41 @@
 #pragma once
 
+#include <variant>
 #include "../geometry.h"
 #include "../../utils/random.h"
 
 namespace lattice
 {
 
+    using SpinVariant = std::variant<int32_t, std::array<double, 3>>;
+
     class SpinModelBase
     {
     public:
         virtual ~SpinModelBase() = default;
 
-        // Set magnetic state for specific atom (true = magnetic, false = paramagnetic defects)
+        // === MODEL METADATA ===
+        virtual SpinModel get_type() const = 0;
+
+        // === DEFECT MANAGEMENT ===
         virtual void set_magnetic(int32_t atom_index, bool magnetic) = 0;
-
-        // Check if atom is magnetic
         virtual bool is_magnetic(int32_t atom_index) const = 0;
-
-        // Get reference to the magnetic mask vector for bulk operations
         virtual const std::vector<bool> &get_magnetic_mask() const = 0;
-
-        // Create random paramagnetic defects with given concentration [0,1]
         virtual void set_random_defects(double concentration) = 0;
 
-        // Randomly initialize spins
+        // === SYSTEM STATISTICS ===
+        virtual int32_t count_magnetic_atoms() const = 0;
+        virtual int32_t count_defects() const = 0;
+        virtual std::vector<int32_t> get_magnetic_atom_indices() const = 0;
+        virtual std::vector<int32_t> get_defect_indices() const = 0;
+
+        // === WORKING WITH SPINS ===
+        virtual SpinVariant get_spin(int32_t atom_index) const = 0;
+        virtual void set_spin(int32_t atom_index, const SpinVariant &value) = 0;
+        virtual void flip_spins(const std::vector<int32_t> &indices) = 0;
+
+        // === INITIALIZING CONFIGURATIONS ===
         virtual void random_initialize() = 0;
-
-        // Initialize all magnetic spins in ferromagnetic alignment
-        virtual void ferromagnetic_initialize() = 0;
-
-        // Initialize all magnetic spins in antiferromagnetic pattern
-        virtual void antiferromagnetic_initialize() = 0;
-
-        // Get the type of spin model (Ising, Heisenberg, etc.)
-        virtual SpinModel get_type() const = 0;
     };
 
-}
+} // namespace lattice

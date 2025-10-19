@@ -16,6 +16,8 @@ namespace lattice
             spins_.resize(num_atoms_);
         }
 
+        SpinModel get_type() const override { return SpinModel::ISING; }
+
         void set_magnetic(int32_t atom_index, bool magnetic) override
         {
             if (atom_index < 0 || atom_index >= num_atoms_)
@@ -32,10 +34,7 @@ namespace lattice
             return magnetic_mask_[atom_index];
         }
 
-        const std::vector<bool> &get_magnetic_mask() const override
-        {
-            return magnetic_mask_;
-        }
+        const std::vector<bool> &get_magnetic_mask() const override { return magnetic_mask_; }
 
         void set_random_defects(double concentration) override
         {
@@ -55,6 +54,89 @@ namespace lattice
                 magnetic_mask_[indices[i]] = false;
         }
 
+        int32_t count_magnetic_atoms() const override
+        {
+            int32_t count = 0;
+            for (int32_t i = 0; i < magnetic_mask_.size(); ++i)
+                count += magnetic_mask_[i];
+
+            return count;
+        }
+
+        int32_t count_defects() const override
+        {
+            int32_t count = 0;
+            for (int32_t i = 0; i < magnetic_mask_.size(); ++i)
+                count += !magnetic_mask_[i];
+
+            return count;
+        }
+
+        std::vector<int32_t> get_magnetic_atom_indices() const override
+        {
+            std::vector<int32_t> indices;
+            indices.reserve(magnetic_mask_.size());
+            for (int32_t i = 0; i < magnetic_mask_.size(); ++i)
+                if (magnetic_mask_[i])
+                    indices.push_back(i);
+
+            return indices;
+        }
+
+        std::vector<int32_t> get_defect_indices() const override
+        {
+            std::vector<int32_t> indices;
+            indices.reserve(magnetic_mask_.size());
+            for (int32_t i = 0; i < magnetic_mask_.size(); ++i)
+                if (!magnetic_mask_[i])
+                    indices.push_back(i);
+
+            return indices;
+        }
+
+        SpinVariant get_spin(int32_t atom_index) const override
+        {
+            if (atom_index < 0 || atom_index >= num_atoms_)
+                throw std::invalid_argument("Index is out of range num_atoms");
+
+            if (!magnetic_mask_[atom_index])
+                throw std::invalid_argument("Atom is not magnetic");
+
+            return spins_[atom_index];
+        }
+
+        void set_spin(int32_t atom_index, const SpinVariant &value) override
+        {
+            if (atom_index < 0 || atom_index >= num_atoms_)
+                throw std::invalid_argument("Index is out of range num_atoms");
+
+            if (!magnetic_mask_[atom_index])
+                throw std::invalid_argument("Cannot set spin for non-magnetic atom");
+
+            if (auto *spin_value = std::get_if<int32_t>(&value))
+            {
+                if (*spin_value != -1 && *spin_value != 1)
+                    throw std::invalid_argument("Ising spin must be -1 or +1");
+                spins_[atom_index] = *spin_value;
+            }
+            else
+                throw std::invalid_argument("Invalid spin type for Ising model");
+        }
+
+        void flip_spins(const std::vector<int32_t> &indices) override
+        {
+            for (int32_t idx : indices)
+            {
+                if (idx < 0 || idx >= num_atoms_)
+                    throw std::invalid_argument("Index is out of range num_atoms");
+
+                if (!magnetic_mask_[idx])
+                    throw std::invalid_argument("Cannot flip spin of non-magnetic atom");
+
+                spins_[idx] *= -1;
+            }
+        }
+
         void random_initialize() override
         {
             spins_.clear();
@@ -65,29 +147,6 @@ namespace lattice
                 spins_.push_back(dist(Random::get_rng()) ? 1 : -1);
         }
 
-        void ferromagnetic_initialize() override
-        {
-            spins_.clear();
-            spins_.reserve(num_atoms_);
-
-            for (int32_t i = 0; i < num_atoms_; ++i)
-                spins_.push_back(1);
-        }
-
-        void antiferromagnetic_initialize() override
-        {
-            spins_.clear();
-            spins_.resize(num_atoms_);
-
-            for (int32_t i = 0; i < num_atoms_; ++i)
-                spins_[i] = (i % 2 == 0) ? 1 : -1;
-        }
-
-        SpinModel get_type() const override
-        {
-            return SpinModel::ISING;
-        }
-
     private:
         const Geometry &geometry_;
         const int32_t num_atoms_;
@@ -96,4 +155,4 @@ namespace lattice
         std::vector<bool> magnetic_mask_;
     };
 
-}
+} // namespace lattice

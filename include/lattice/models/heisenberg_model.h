@@ -5,4 +5,150 @@
 namespace lattice
 {
 
-}
+    class HeisenbergModel : public SpinModelBase
+    {
+    public:
+        explicit HeisenbergModel(Geometry &geometry)
+            : geometry_(geometry), num_atoms_(geometry.get_num_atoms())
+        {
+            magnetic_mask_.resize(num_atoms_, true);
+            spins_.resize(num_atoms_);
+        }
+
+        SpinModel get_type() const override { return SpinModel::HEISENBERG; }
+
+        void set_magnetic(int32_t atom_index, bool magnetic) override
+        {
+            if (atom_index < 0 || atom_index >= num_atoms_)
+                throw std::invalid_argument("Index is out of range num_atoms");
+
+            magnetic_mask_[atom_index] = magnetic;
+        }
+
+        bool is_magnetic(int32_t atom_index) const override
+        {
+            if (atom_index < 0 || atom_index >= num_atoms_)
+                throw std::invalid_argument("Index is out of range num_atoms");
+
+            return magnetic_mask_[atom_index];
+        }
+
+        const std::vector<bool> &get_magnetic_mask() const override { return magnetic_mask_; }
+
+        void set_random_defects(double concentration) override
+        {
+        }
+
+        int32_t count_magnetic_atoms() const override
+        {
+            int32_t count = 0;
+            for (int32_t i = 0; i < magnetic_mask_.size(); ++i)
+                count += magnetic_mask_[i];
+
+            return count;
+        }
+
+        int32_t count_defects() const override
+        {
+            int32_t count = 0;
+            for (int32_t i = 0; i < magnetic_mask_.size(); ++i)
+                count += !magnetic_mask_[i];
+
+            return count;
+        }
+
+        std::vector<int32_t> get_magnetic_atom_indices() const override
+        {
+            std::vector<int32_t> indices;
+            indices.reserve(magnetic_mask_.size());
+            for (int32_t i = 0; i < magnetic_mask_.size(); ++i)
+                if (magnetic_mask_[i])
+                    indices.push_back(i);
+
+            return indices;
+        }
+
+        std::vector<int32_t> get_defect_indices() const override
+        {
+            std::vector<int32_t> indices;
+            indices.reserve(magnetic_mask_.size());
+            for (int32_t i = 0; i < magnetic_mask_.size(); ++i)
+                if (!magnetic_mask_[i])
+                    indices.push_back(i);
+
+            return indices;
+        }
+
+        SpinVariant get_spin(int32_t atom_index) const override
+        {
+            if (atom_index < 0 || atom_index >= num_atoms_)
+                throw std::invalid_argument("Index is out of range num_atoms");
+
+            if (!magnetic_mask_[atom_index])
+                throw std::invalid_argument("Atom is not magnetic");
+
+            return spins_[atom_index];
+        }
+
+        void set_spin(int32_t atom_index, const SpinVariant &value) override
+        {
+            if (atom_index < 0 || atom_index >= num_atoms_)
+                throw std::invalid_argument("Index is out of range num_atoms");
+
+            if (!magnetic_mask_[atom_index])
+                throw std::invalid_argument("Cannot set spin for non-magnetic atom");
+
+            if (auto *spin_value = std::get_if<std::array<double, 3>>(&value))
+            {
+                double norm = std::sqrt((*spin_value)[0] * (*spin_value)[0] +
+                                        (*spin_value)[1] * (*spin_value)[1] +
+                                        (*spin_value)[2] * (*spin_value)[2]);
+
+                if (std::abs(norm - 1.0) > 1e-5)
+                    throw std::invalid_argument("Heisenberg spin must be normalized");
+
+                spins_[atom_index] = *spin_value;
+            }
+            else
+                throw std::invalid_argument("Invalid spin type for Heisenberg model");
+        }
+
+        void flip_spins(const std::vector<int32_t> &indices) override
+        {
+            for (int32_t idx : indices)
+            {
+                if (idx < 0 || idx >= num_atoms_)
+                    throw std::invalid_argument("Index is out of range num_atoms");
+
+                if (!magnetic_mask_[idx])
+                    throw std::invalid_argument("Cannot set spin for non-magnetic atom");
+
+                spins_[idx][0] *= -1;
+                spins_[idx][1] *= -1;
+                spins_[idx][2] *= -1;
+            }
+        }
+
+        void random_initialize() override
+        {
+            std::uniform_real_distribution<double> dist(-1.0, 1.0);
+            for (int32_t i = 0; i < num_atoms_; ++i)
+            {
+                double x = dist(Random::get_rng());
+                double y = dist(Random::get_rng());
+                double z = dist(Random::get_rng());
+                double norm = std::sqrt(x * x + y * y + z * z);
+
+                spins_[i] = {x / norm, y / norm, z / norm};
+            }
+        }
+
+    private:
+        const Geometry geometry_;
+        const int32_t num_atoms_;
+
+        std::vector<std::array<double, 3>> spins_;
+        std::vector<bool> magnetic_mask_;
+    };
+
+} // namespace lattice

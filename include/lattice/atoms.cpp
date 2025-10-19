@@ -11,8 +11,7 @@ lattice::SpinModel lattice::Atoms::parse_model_type(const std::string &model_typ
 {
     static const std::unordered_map<std::string, SpinModel> mapping = {
         {"ising", SpinModel::ISING},
-        {"heisenberg", SpinModel::HEISENBERG},
-        {"xy", SpinModel::XY}};
+        {"heisenberg", SpinModel::HEISENBERG}};
 
     if (auto it = mapping.find(model_type_str); it != mapping.end())
         return it->second;
@@ -28,11 +27,7 @@ std::unique_ptr<lattice::SpinModelBase> lattice::Atoms::create_model(SpinModel m
         return std::make_unique<IsingModel>(*geometry_);
 
     case SpinModel::HEISENBERG:
-        // return std::make_unique<HeisenbergModel>(*geometry_);
-        throw;
-
-    case SpinModel::XY:
-        // return std::make_unique<XYModel>(*geometry_);
+        return std::make_unique<HeisenbergModel>(*geometry_);
         throw;
 
     default:

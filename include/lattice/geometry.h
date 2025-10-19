@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstdint>
 #include <cmath>
+#include <algorithm>
 #include "../core/config.h"
 #include "types.h"
 
@@ -57,4 +58,4 @@ namespace lattice
         void precomp_neighbors();
     };
 
-}
+} // namespace lattice
