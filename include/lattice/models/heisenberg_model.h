@@ -131,12 +131,11 @@ namespace lattice
 
         void random_initialize() override
         {
-            std::uniform_real_distribution<double> dist(-1.0, 1.0);
             for (int32_t i = 0; i < num_atoms_; ++i)
             {
-                double x = dist(Random::get_rng());
-                double y = dist(Random::get_rng());
-                double z = dist(Random::get_rng());
+                double x = Random::uniform_real(-1.0, 1.0);
+                double y = Random::uniform_real(-1.0, 1.0);
+                double z = Random::uniform_real(-1.0, 1.0);
                 double norm = std::sqrt(x * x + y * y + z * z);
 
                 spins_[i] = {x / norm, y / norm, z / norm};

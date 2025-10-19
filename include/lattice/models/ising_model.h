@@ -142,9 +142,8 @@ namespace lattice
             spins_.clear();
             spins_.reserve(num_atoms_);
 
-            std::bernoulli_distribution dist(0.5);
             for (int32_t i = 0; i < num_atoms_; ++i)
-                spins_.push_back(dist(Random::get_rng()) ? 1 : -1);
+                spins_.push_back((Random::bernoulli()) ? 1 : -1);
         }
 
     private:
