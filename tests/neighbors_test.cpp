@@ -1,11 +1,11 @@
 #include <iostream>
-#include "../include/lattice/atoms.h"
+#include "tests.h"
 
 void print_neighbors_indexes(const lattice::Geometry &geometry)
 {
-    const auto &neighbors = geometry.get_neighbors();
-    const int32_t num_atoms = geometry.get_num_atoms();
-    const int32_t num_shells = geometry.get_num_shells();
+    const auto &neighbors = geometry.get_neighbor_table();
+    const int32_t num_atoms = geometry.get_atom_count();
+    const int32_t num_shells = geometry.get_shell_count();
 
     for (int32_t atom_idx = 0; atom_idx < num_atoms; ++atom_idx)
     {
@@ -31,15 +31,10 @@ int main()
 {
     Config config;
 
-    config.set("lattice.linear_size", 10);
-    config.set("lattice.norm_a", 1.0);
-    config.set("lattice.norm_b", 1.0);
-    config.set("lattice.crystal_type", "rectangular");
-    config.set("lattice.boundary_conditions", "periodic");
-    config.set("physical.exchange_interaction", std::vector<double>{1.0, 0.25});
-    config.set("physical.spin_model", "ising");
+    fill_test_config(config, 10);
+    config.set("physical.exchange_constants", std::vector<double>{1.0, 0.25});
 
     lattice::Atoms atoms(config);
-    lattice::Geometry geometry = atoms.geometry();
+    lattice::Geometry geometry = atoms.get_geometry();
     print_neighbors_indexes(geometry);
 }

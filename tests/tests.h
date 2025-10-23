@@ -54,14 +54,13 @@ void print_vector(const std::vector<bool> &vec, const std::string &name)
     std::cout << std::endl;
 }
 
-void fill_test_config(Config &config, int32_t linear_size = 5, std::string model = "ising")
+void fill_test_config(Config &config, int32_t system_size = 5)
 {
 
-    config.set("lattice.linear_size", linear_size);
-    config.set("lattice.norm_a", 1.0);
-    config.set("lattice.norm_b", 1.0);
+    config.set("lattice.system_size", system_size);
+    config.set("lattice.lattice_constant_a", 1.0);
+    config.set("lattice.lattice_constant_b", 1.0);
     config.set("lattice.crystal_type", "rectangular");
-    config.set("lattice.boundary_conditions", "periodic");
-    config.set("physical.exchange_interaction", std::vector<double>{1.0});
-    config.set("physical.spin_model", model);
+    config.set("lattice.boundary_type", "periodic");
+    config.set("physical.exchange_constants", std::vector<double>{1.0});
 }
