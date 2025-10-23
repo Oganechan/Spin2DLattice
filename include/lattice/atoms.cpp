@@ -83,6 +83,12 @@ std::vector<int32_t> lattice::Atoms::get_defect_atoms() const
 
 // === WORKING WITH SPINS ===
 
+int32_t lattice::Atoms::select_random_magnetic_atom() const
+{
+    const auto &magnetic_atoms = get_magnetic_atoms();
+    return magnetic_atoms[Random::uniform_int<int32_t>(0, magnetic_atoms.size() - 1)];
+}
+
 void lattice::Atoms::flip_spins(const std::vector<int32_t> &atom_ids)
 {
     for (int32_t atom_id : atom_ids)

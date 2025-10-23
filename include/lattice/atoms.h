@@ -92,6 +92,9 @@ namespace lattice
             return {x / norm, y / norm, z / norm};
         }
 
+        //
+        int32_t select_random_magnetic_atom() const;
+
         // Flips the spin direction for the specified atoms
         void flip_spins(const std::vector<int32_t> &atom_ids);
 
