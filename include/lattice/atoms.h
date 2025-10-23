@@ -14,13 +14,25 @@ namespace lattice
         // === DEFECT MANAGEMENT ===
 
         // Sets the magnetic state of an atom (true = magnetic, false = non-magnetic)
-        void set_magnetic_state(int32_t atom_id, bool is_magnetic);
+        inline void set_magnetic_state(int32_t atom_id, bool is_magnetic)
+        {
+            if (atom_id < 0 || atom_id >= geometry_.get_atom_count())
+                throw std::out_of_range("Atom ID out of range");
+
+            magnetic_mask_[atom_id] = is_magnetic;
+        }
 
         // Returns the magnetic state of the specified atom
-        bool get_magnetic_state(int32_t atom_id) const;
+        inline bool get_magnetic_state(int32_t atom_id) const
+        {
+            if (atom_id < 0 || atom_id >= geometry_.get_atom_count())
+                throw std::out_of_range("Atom ID out of range");
+
+            return magnetic_mask_[atom_id];
+        }
 
         // Returns a vector representing the magnetic mask for all atoms
-        const std::vector<bool> get_magnetic_mask();
+        const std::vector<bool> get_magnetic_mask() { return magnetic_mask_; }
 
         // Randomly sets atoms as non-magnetic atoms with given concentration
         void set_random_defects(double defect_concentration);
@@ -42,10 +54,32 @@ namespace lattice
         // === WORKING WITH SPINS ===
 
         // Returns the spin vector of the specified atom
-        std::array<double, 3> get_spin(int32_t atom_id) const;
+        inline std::array<double, 3> get_spin(int32_t atom_id) const
+        {
+            if (atom_id < 0 || atom_id >= geometry_.get_atom_count())
+                throw std::out_of_range("Atom ID out of range");
+            if (!magnetic_mask_[atom_id])
+                throw std::invalid_argument("Atom is not magnetic");
+
+            return spin_vectors_[atom_id];
+        }
 
         // Sets the spin vector for the specified atom
-        void set_spin(int32_t atom_id, const std::array<double, 3> &spin_vector);
+        inline void set_spin(int32_t atom_id, const std::array<double, 3> &spin_vector)
+        {
+            if (atom_id < 0 || atom_id >= geometry_.get_atom_count())
+                throw std::out_of_range("Atom ID out of range");
+            if (!magnetic_mask_[atom_id])
+                throw std::invalid_argument("Cannot set spin for non-magnetic atom");
+
+            double norm = std::sqrt(spin_vector[0] * spin_vector[0] +
+                                    spin_vector[1] * spin_vector[1] +
+                                    spin_vector[2] * spin_vector[2]);
+
+            spin_vectors_[atom_id] = {spin_vector[0] / norm,
+                                      spin_vector[1] / norm,
+                                      spin_vector[2] / norm};
+        }
 
         // Flips the spin direction for the specified atoms
         void flip_spins(const std::vector<int32_t> &atom_ids);
@@ -62,10 +96,10 @@ namespace lattice
         void initialize_antiferromagnetic();
 
         // Returns the configuration object
-        const Config &get_config() const { return config_; }
+        inline const Config &get_config() const { return config_; }
 
         // Returns the geometry object
-        const Geometry &get_geometry() const { return geometry_; }
+        inline const Geometry &get_geometry() const { return geometry_; }
 
     private:
         const Config &config_;
