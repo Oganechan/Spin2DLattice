@@ -69,10 +69,8 @@ double lattice::Geometry::get_distance(int32_t first_atom_id, int32_t second_ato
         }
         return std::sqrt(min_distance_sq);
     }
-    else
-    {
-        return std::sqrt(delta_x * delta_x + delta_y * delta_y);
-    }
+
+    return std::sqrt(delta_x * delta_x + delta_y * delta_y);
 }
 
 void lattice::Geometry::initialize_lattice()
