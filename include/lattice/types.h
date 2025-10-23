@@ -3,12 +3,6 @@
 namespace lattice
 {
 
-    enum class SpinModel
-    {
-        ISING,
-        HEISENBERG
-    };
-
     enum class CrystalType
     {
         RECTANGULAR,
