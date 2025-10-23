@@ -1,12 +1,12 @@
 #include "geometry.h"
 
 lattice::Geometry::Geometry(const Config &config)
-    : system_size_(config.get<int32_t>("lattice.linear_size")),
-      shell_count_(config.get<std::vector<double>>("physical.exchange_interaction").size()),
-      lattice_constant_a_(config.get<double>("lattice.norm_a")),
-      lattice_constant_b_(config.get<double>("lattice.norm_b")),
+    : system_size_(config.get<int32_t>("lattice.system_size")),
+      shell_count_(config.get<std::vector<double>>("physical.exchange_constants").size()),
+      lattice_constant_a_(config.get<double>("lattice.lattice_constant_a")),
+      lattice_constant_b_(config.get<double>("lattice.lattice_constant_b")),
       crystal_type_(parse_crystal_type(config.get<std::string>("lattice.crystal_type"))),
-      boundary_type_(parse_boundary_type(config.get<std::string>("lattice.boundary_conditions")))
+      boundary_type_(parse_boundary_type(config.get<std::string>("lattice.boundary_type")))
 {
     initialize_lattice();
     validate_parameters();

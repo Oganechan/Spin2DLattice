@@ -6,8 +6,8 @@ physics::Calculator::Calculator(const lattice::Atoms &atoms)
       neighbor_table_(geometry_.get_neighbor_table()),
       atom_count_(geometry_.get_atom_count()),
       shell_count_(geometry_.get_shell_count()),
-      exchange_constants_(atoms_.get_config().get<std::vector<double>>("physical.exchange_interaction")),
-      external_magnetic_field_(atoms.get_config().get<std::array<double, 3>>("physical.external_field")) {}
+      exchange_constants_(atoms_.get_config().get<std::vector<double>>("physical.exchange_constants")),
+      external_magnetic_field_(atoms.get_config().get<std::array<double, 3>>("physical.external_magnetic_field")) {}
 
 // === ENERGY CALCULATIONS ===
 
