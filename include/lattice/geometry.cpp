@@ -42,33 +42,6 @@ lattice::BoundaryType lattice::Geometry::parse_boundary_type(const std::string &
     throw std::invalid_argument("Unknown boundary type: " + boundary);
 }
 
-std::array<int32_t, 3> lattice::Geometry::get_cell_index(const int32_t atom_id) const
-{
-    int32_t atom_in_cell_id = atom_id % basis_count_;
-    int32_t temp = atom_id / basis_count_;
-    int32_t cell_i = temp % system_size_;
-    int32_t cell_j = temp / system_size_;
-
-    return {cell_i, cell_j, atom_in_cell_id};
-}
-
-int32_t lattice::Geometry::get_atom_id(const int32_t cell_i, const int32_t cell_j, const int32_t atom_in_cell_id) const
-{
-    int32_t taco_i = (cell_i % system_size_ + system_size_) % system_size_;
-    int32_t taco_j = (cell_j % system_size_ + system_size_) % system_size_;
-
-    return (taco_i + taco_j * system_size_) * basis_count_ + atom_in_cell_id;
-}
-
-std::array<double, 2> lattice::Geometry::get_atom_position(int32_t atom_id) const
-{
-    auto [cell_i, cell_j, atom_in_cell_id] = atom_indices_[atom_id];
-    double x = cell_i * lattice_vectors_[0][0] + cell_j * lattice_vectors_[1][0] + basis_vectors_[atom_in_cell_id][0];
-    double y = cell_i * lattice_vectors_[0][1] + cell_j * lattice_vectors_[1][1] + basis_vectors_[atom_in_cell_id][1];
-
-    return {x, y};
-}
-
 double lattice::Geometry::get_distance(int32_t first_atom_id, int32_t second_atom_id) const
 {
     if (first_atom_id < 0 || first_atom_id >= atom_count_ || second_atom_id < 0 || second_atom_id > atom_count_)
