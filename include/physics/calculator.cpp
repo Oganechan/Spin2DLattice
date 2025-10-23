@@ -55,19 +55,12 @@ double physics::Calculator::calculate_pair_energy(int32_t first_atom_id, int32_t
     return J * calculate_spin_dot_product(spin1, spin2);
 }
 
-double physics::Calculator::calculate_flip_energy_difference(int32_t atom_id) const
+double physics::Calculator::calculate_flip_energy_difference(int32_t atom_id, std::array<double, 3> new_spin) const
 {
     if (!atoms_.get_magnetic_state(atom_id))
         return 0.0;
 
     double original_energy = calculate_atom_energy(atom_id);
-
-    double x = Random::uniform_real(-1.0, 1.0);
-    double y = Random::uniform_real(-1.0, 1.0);
-    double z = Random::uniform_real(-1.0, 1.0);
-    double norm = std::sqrt(x * x + y * y + z * z);
-    std::array<double, 3> new_spin = {x / norm, y / norm, z / norm};
-
     double new_energy = -calculate_spin_dot_product(new_spin, external_magnetic_field_);
 
     for (int32_t shell_index = 0; shell_index < shell_count_; ++shell_index)

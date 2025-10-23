@@ -23,7 +23,7 @@ namespace physics
         double calculate_pair_energy(int32_t first_atom_id, int32_t second_atom_id) const;
 
         // Calculates the energy difference if the specified atom's spin were flipped
-        double calculate_flip_energy_difference(int32_t atom_id) const;
+        double calculate_flip_energy_difference(int32_t atom_id, std::array<double, 3> new_spin) const;
 
         // === MAGNETIZATION CALCULATIONS ===
 
