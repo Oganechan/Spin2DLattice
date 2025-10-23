@@ -81,6 +81,17 @@ namespace lattice
                                       spin_vector[2] / norm};
         }
 
+        // Returns normalized spin vector [x, y, z] with ||spin|| = 1.0
+        inline std::array<double, 3> generate_random_spin() const
+        {
+            double x = Random::uniform_real(-1.0, 1.0);
+            double y = Random::uniform_real(-1.0, 1.0);
+            double z = Random::uniform_real(-1.0, 1.0);
+            double norm = std::sqrt(x * x + y * y + z * z);
+
+            return {x / norm, y / norm, z / norm};
+        }
+
         // Flips the spin direction for the specified atoms
         void flip_spins(const std::vector<int32_t> &atom_ids);
 
@@ -108,7 +119,6 @@ namespace lattice
         std::vector<std::array<double, 3>> spin_vectors_;
         std::vector<bool> magnetic_mask_;
 
-        void initialize_geometry();
         void initialize_spins();
     };
 

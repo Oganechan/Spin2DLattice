@@ -104,12 +104,7 @@ void lattice::Atoms::initialize_random()
 {
     for (int32_t i = 0; i < geometry_.get_atom_count(); ++i)
     {
-        double x = Random::uniform_real(-1.0, 1.0);
-        double y = Random::uniform_real(-1.0, 1.0);
-        double z = Random::uniform_real(-1.0, 1.0);
-        double norm = std::sqrt(x * x + y * y + z * z);
-
-        spin_vectors_[i] = {x / norm, y / norm, z / norm};
+        spin_vectors_[i] = generate_random_spin();
     }
 }
 
