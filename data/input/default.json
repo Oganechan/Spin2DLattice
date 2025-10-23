@@ -7,7 +7,6 @@
         "boundary_type": "periodic"
     },
     "physical": {
-        "temperature": 2.0,
         "external_magnetic_field": [
             0.0,
             0.0,
@@ -17,7 +16,6 @@
             1.0,
             0.1,
             0.01
-        ],
-        "defect_concentration": 0.05
+        ]
     }
 }
