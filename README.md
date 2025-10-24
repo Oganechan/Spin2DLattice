@@ -21,12 +21,12 @@ A high-performance C++ implementation of Monte Carlo simulation for magnetic spi
 ```bash
 git clone https://github.com/Oganechan/Spin2DLattice
 mkdir ./Spin2DLattice/build && cd ./Spin2DLattice/build
-g++ ../include/core/data.cpp ../include/core/simulation.cpp ../include/lattice/atoms.cpp ../include/lattice/geometry.cpp ../include/physics/calculator.cpp ../include/algorithm/metropolis.cpp ../include/main.cpp -o Spim2DLattice
+g++ ../include/core/data.cpp ../include/core/simulation.cpp ../include/lattice/atoms.cpp ../include/lattice/geometry.cpp ../include/physics/calculator.cpp ../include/algorithm/metropolis.cpp ../include/main.cpp -o Spin2DLattice
 ```
 
 ### Run simulation
 ```bash
-./Lattice2DLattice
+./Spin2DLattice
 ```
 
 ## Configuration example
