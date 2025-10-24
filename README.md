@@ -4,7 +4,8 @@ A high-performance C++ implementation of Monte Carlo simulation for magnetic spi
 
 ## Authors
 
-- **Leonid Brykin** ([@d3adand3nd](https://github.com/d3adand3nd)) - Project inspiration and scientific guidance  
+- **Leonid Brykin** ([@d3adand3nd](https://github.com/d3adand3nd)) - Project inspiration and scientific guidance
+- **Nikita Legkikh** ([@oganechan](https://github.com/Oganechan)) - Implementation and development
 - **Murlyka** ([@murlyka-coder](https://github.com/murlyka-coder)) - Implementation and development
 
 ## Features
