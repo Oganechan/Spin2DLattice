@@ -1,7 +1,7 @@
 #pragma once
 
-#include "./models/ising_model.h"
-#include "./models/heisenberg_model.h"
+#include "geometry.h"
+#include "../utils/random.h"
 
 namespace lattice
 {
@@ -11,37 +11,118 @@ namespace lattice
     public:
         explicit Atoms(const Config &config);
 
-        SpinModel get_type() { return model_->get_type(); }
+        // === DEFECT MANAGEMENT ===
 
-        void set_magnetic(int32_t atom_index, bool magnetic) { model_->set_magnetic(atom_index, magnetic); }
-        bool is_magnetic(int32_t atom_index) const { return model_->is_magnetic(atom_index); }
-        const std::vector<bool> &get_magnetic_mask() { return model_->get_magnetic_mask(); }
-        void set_random_defects(double concentration) { model_->set_random_defects(concentration); }
+        // Sets the magnetic state of an atom (true = magnetic, false = non-magnetic)
+        inline void set_magnetic_state(int32_t atom_id, bool is_magnetic)
+        {
+            if (atom_id < 0 || atom_id >= geometry_.get_atom_count())
+                throw std::out_of_range("Atom ID out of range");
 
-        int32_t count_magnetic_atoms() const { return model_->count_magnetic_atoms(); }
-        int32_t count_defects() const { return model_->count_defects(); }
-        std::vector<int32_t> get_magnetic_atom_indices() const { return model_->get_magnetic_atom_indices(); }
-        std::vector<int32_t> get_defect_indices() const { return model_->get_defect_indices(); }
+            magnetic_mask_[atom_id] = is_magnetic;
+        }
 
-        SpinVariant get_spin(int32_t atom_index) const { return model_->get_spin(atom_index); }
-        void set_spin(int32_t atom_index, const SpinVariant &value) { model_->set_spin(atom_index, value); }
-        void flip_spins(const std::vector<int32_t> &indices) { model_->flip_spins(indices); }
+        // Returns the magnetic state of the specified atom
+        inline bool get_magnetic_state(int32_t atom_id) const
+        {
+            if (atom_id < 0 || atom_id >= geometry_.get_atom_count())
+                throw std::out_of_range("Atom ID out of range");
 
-        void random_initialize() { model_->random_initialize(); }
+            return magnetic_mask_[atom_id];
+        }
 
-        const Geometry &geometry() const { return *geometry_; }
-        const SpinModelBase &model() const { return *model_; }
+        // Returns a vector representing the magnetic mask for all atoms
+        const std::vector<bool> get_magnetic_mask() { return magnetic_mask_; }
+
+        // Randomly sets atoms as non-magnetic atoms with given concentration
+        void set_random_defects(double defect_concentration);
+
+        // === SYSTEM STATISTICS ===
+
+        // Returns the total number of magnetic atoms in the system
+        int32_t get_magnetic_count() const;
+
+        // Returns the total number of non-magnetic atoms in the system
+        int32_t get_defect_count() const;
+
+        // Returns a list of atom IDs that are magnetic
+        std::vector<int32_t> get_magnetic_atoms() const;
+
+        // Returns a list of atom IDs that are non-magnetic
+        std::vector<int32_t> get_defect_atoms() const;
+
+        // === WORKING WITH SPINS ===
+
+        // Returns the spin vector of the specified atom
+        inline std::array<double, 3> get_spin(int32_t atom_id) const
+        {
+            if (atom_id < 0 || atom_id >= geometry_.get_atom_count())
+                throw std::out_of_range("Atom ID out of range");
+            if (!magnetic_mask_[atom_id])
+                throw std::invalid_argument("Atom is not magnetic");
+
+            return spin_vectors_[atom_id];
+        }
+
+        // Sets the spin vector for the specified atom
+        inline void set_spin(int32_t atom_id, const std::array<double, 3> &spin_vector)
+        {
+            if (atom_id < 0 || atom_id >= geometry_.get_atom_count())
+                throw std::out_of_range("Atom ID out of range");
+            if (!magnetic_mask_[atom_id])
+                throw std::invalid_argument("Cannot set spin for non-magnetic atom");
+
+            double norm = std::sqrt(spin_vector[0] * spin_vector[0] +
+                                    spin_vector[1] * spin_vector[1] +
+                                    spin_vector[2] * spin_vector[2]);
+
+            spin_vectors_[atom_id] = {spin_vector[0] / norm,
+                                      spin_vector[1] / norm,
+                                      spin_vector[2] / norm};
+        }
+
+        // Returns normalized spin vector [x, y, z] with ||spin|| = 1.0
+        inline std::array<double, 3> generate_random_spin() const
+        {
+            double x = Random::uniform_real(-1.0, 1.0);
+            double y = Random::uniform_real(-1.0, 1.0);
+            double z = Random::uniform_real(-1.0, 1.0);
+            double norm = std::sqrt(x * x + y * y + z * z);
+
+            return {x / norm, y / norm, z / norm};
+        }
+
+        //
+        int32_t select_random_magnetic_atom() const;
+
+        // Flips the spin direction for the specified atoms
+        void flip_spins(const std::vector<int32_t> &atom_ids);
+
+        // === INITIALIZING CONFIGURATIONS ===
+
+        // Initializes all magnetic spins with random orientations
+        void initialize_random();
+
+        // Initializes all magnetic spins in ferromagnetic alignment (+z direction)
+        void initialize_ferromagnetic();
+
+        // Initializes magnetic spins in antiferromagnetic pattern (+-z alternating direction)
+        void initialize_antiferromagnetic();
+
+        // Returns the configuration object
+        inline const Config &get_config() const { return config_; }
+
+        // Returns the geometry object
+        inline const Geometry &get_geometry() const { return geometry_; }
 
     private:
         const Config &config_;
-        std::unique_ptr<Geometry> geometry_;
-        std::unique_ptr<SpinModelBase> model_;
+        const Geometry geometry_;
 
-        static SpinModel parse_model_type(const std::string &model_type_str);
-        std::unique_ptr<SpinModelBase> create_model(SpinModel model_type);
+        std::vector<std::array<double, 3>> spin_vectors_;
+        std::vector<bool> magnetic_mask_;
 
-        void initialize_geometry();
-        void initialize_model();
+        void initialize_spins();
     };
 
 } // namespace lattice

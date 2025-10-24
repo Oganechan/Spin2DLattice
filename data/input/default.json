@@ -1,18 +1,27 @@
 {
     "lattice": {
         "crystal_type": "rectangular",
-        "linear_size": 20,
-        "norm_a": 1.0,
-        "norm_b": 1.0,
-        "boundary_conditions": "periodic"
+        "system_size": 20,
+        "lattice_constant_a": 1.0,
+        "lattice_constant_b": 1.0,
+        "boundary_type": "periodic"
     },
     "physical": {
-        "spin_model": "ising",
-        "exchange_interaction": [
+        "external_magnetic_field": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "exchange_constants": [
             1.0,
             0.1,
             0.01
         ],
-        "defect_concentration": 0.05
+        "temperature": 25.0
+    },
+    "simulation": {
+        "equilibration_sweeps": 1000,
+        "production_sweeps": 10000,
+        "measurement_interval": 10
     }
 }
