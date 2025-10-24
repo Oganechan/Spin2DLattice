@@ -17,6 +17,11 @@
             0.1,
             0.01
         ],
-        "temperature": 1.0
+        "temperature": 25.0
+    },
+    "simulation": {
+        "equilibration_sweeps": 1000,
+        "production_sweeps": 10000,
+        "measurement_interval": 10
     }
 }
