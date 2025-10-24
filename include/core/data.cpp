@@ -46,7 +46,7 @@ void Data::compute_statistics()
 
 void Data::save_time_series() const
 {
-    std::ofstream file(output_path_ + "_timeseries.dat");
+    std::ofstream file(output_path_ + "/timeseries.dat");
 
     file << "#step energy magnetization\n";
 
