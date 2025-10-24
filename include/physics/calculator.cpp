@@ -35,7 +35,7 @@ double physics::Calculator::calculate_atom_energy(int32_t atom_id) const
         double J = get_exchange_constant(shell_index);
         for (int32_t neighbor_id : neighbor_table_[atom_id][shell_index])
             if (atoms_.get_magnetic_state(neighbor_id))
-                energy += J * calculate_spin_dot_product(atom_spin, atoms_.get_spin(neighbor_id));
+                energy -= J * calculate_spin_dot_product(atom_spin, atoms_.get_spin(neighbor_id));
     }
 
     return energy;
@@ -52,7 +52,7 @@ double physics::Calculator::calculate_pair_energy(int32_t first_atom_id, int32_t
     double distance = geometry_.get_distance(first_atom_id, second_atom_id);
     double J = get_exchange_constant(static_cast<int32_t>(distance));
 
-    return J * calculate_spin_dot_product(spin1, spin2);
+    return -J * calculate_spin_dot_product(spin1, spin2);
 }
 
 double physics::Calculator::calculate_flip_energy_difference(int32_t atom_id, std::array<double, 3> new_spin) const
@@ -60,18 +60,23 @@ double physics::Calculator::calculate_flip_energy_difference(int32_t atom_id, st
     if (!atoms_.get_magnetic_state(atom_id))
         return 0.0;
 
-    double original_energy = calculate_atom_energy(atom_id);
-    double new_energy = -calculate_spin_dot_product(new_spin, external_magnetic_field_);
+    const auto &old_spin = atoms_.get_spin(atom_id);
+
+    std::array<double, 3> spin_diff = {new_spin[0] - old_spin[0],
+                                       new_spin[1] - old_spin[1],
+                                       new_spin[2] - old_spin[2]};
+
+    double energy_diff = -calculate_spin_dot_product(spin_diff, external_magnetic_field_);
 
     for (int32_t shell_index = 0; shell_index < shell_count_; ++shell_index)
     {
         double J = get_exchange_constant(shell_index);
         for (int32_t neighbor_id : neighbor_table_[atom_id][shell_index])
             if (atoms_.get_magnetic_state(neighbor_id))
-                new_energy += J * calculate_spin_dot_product(new_spin, atoms_.get_spin(neighbor_id));
+                energy_diff -= J * calculate_spin_dot_product(spin_diff, atoms_.get_spin(neighbor_id));
     }
 
-    return new_energy - original_energy;
+    return energy_diff;
 }
 
 // === MAGNETIZATION CALCULATIONS ===
