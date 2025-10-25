@@ -1,4 +1,5 @@
 .vscode/
 build/
-data/output*
+data/input/*
+data/output/*
 leonid/
