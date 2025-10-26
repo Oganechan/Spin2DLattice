@@ -89,21 +89,6 @@ int32_t lattice::Atoms::select_random_magnetic_atom() const
     return magnetic_atoms[Random::uniform_int<int32_t>(0, magnetic_atoms.size() - 1)];
 }
 
-void lattice::Atoms::flip_spins(const std::vector<int32_t> &atom_ids)
-{
-    for (int32_t atom_id : atom_ids)
-    {
-        if (atom_id < 0 || atom_id >= geometry_.get_atom_count())
-            throw std::out_of_range("Atom ID out of range");
-        if (!magnetic_mask_[atom_id])
-            throw std::invalid_argument("Cannot flip spin of non-magnetic atom");
-
-        spin_vectors_[atom_id] = {-spin_vectors_[atom_id][0],
-                                  -spin_vectors_[atom_id][1],
-                                  -spin_vectors_[atom_id][2]};
-    }
-}
-
 // === INITIALIZING CONFIGURATIONS ===
 
 void lattice::Atoms::initialize_random()
