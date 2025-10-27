@@ -16,15 +16,17 @@ void Data::save()
 {
     compute_statistics();
     save_time_series();
+    save_statistics();
 }
 
 void Data::reset()
 {
     energies_.clear();
     magnetizations_.clear();
+    magnetization_vectors_.clear();
 
-    double mean_energy_ = 0.0;
-    double mean_magnetization_ = 0.0;
+    mean_energy_ = 0.0;
+    mean_magnetization_ = 0.0;
 }
 
 void Data::compute_statistics()
@@ -47,9 +49,16 @@ void Data::compute_statistics()
 void Data::save_time_series() const
 {
     std::ofstream file(output_path_ + "/timeseries.dat");
-
-    file << "#step energy magnetization\n";
+    file << "step\tenergy\tmagnetization\n";
 
     for (int32_t i = 0; i < energies_.size(); ++i)
-        file << i << " " << energies_[i] << " " << magnetizations_[i] << "\n";
+        file << i << "\t" << energies_[i] << "\t" << magnetizations_[i] << "\n";
+}
+
+void Data::save_statistics() const
+{
+    std::ofstream file(output_path_ + "/statistics.dat");
+    file << "quantity\tvalue\n"
+         << "energy\t" << mean_energy_ << "\n"
+         << "magnetization\t" << mean_magnetization_ << "\n ";
 }
