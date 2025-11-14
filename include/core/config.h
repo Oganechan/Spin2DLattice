@@ -1,23 +1,21 @@
 #pragma once
 
-#include <string>
+#include "../../external/nlohmann/json.hpp"
+#include <fstream>
 #include <mutex>
 #include <shared_mutex>
-#include <fstream>
 #include <stdexcept>
-#include "../../external/nlohmann/json.hpp"
+#include <string>
 
 using json = nlohmann::json;
 
-class Config
-{
-private:
+class Config {
+  private:
     mutable std::shared_mutex mutex_;
     json config_ = json::object();
 
-public:
-    void load(const std::string &filepath)
-    {
+  public:
+    void load(const std::string &filepath) {
         std::unique_lock lock(mutex_);
         json new_config;
 
@@ -30,16 +28,14 @@ public:
     }
 
     template <typename T>
-    T get(const std::string &key, const T &default_value = T()) const
-    {
+    T get(const std::string &key, const T &default_value = T()) const {
         std::shared_lock lock(mutex_);
 
         json current = config_;
         size_t pos = 0;
         std::string k = key;
 
-        while ((pos = k.find('.')) != std::string::npos)
-        {
+        while ((pos = k.find('.')) != std::string::npos) {
             std::string part = k.substr(0, pos);
 
             if (!current.contains(part))
@@ -52,17 +48,14 @@ public:
         return current.value(k, default_value);
     }
 
-    template <typename T>
-    void set(const std::string &key, const T &value)
-    {
+    template <typename T> void set(const std::string &key, const T &value) {
         std::unique_lock lock(mutex_);
 
         json *current = &config_;
         size_t pos = 0;
         std::string k = key;
 
-        while ((pos = k.find('.')) != std::string::npos)
-        {
+        while ((pos = k.find('.')) != std::string::npos) {
             std::string part = k.substr(0, pos);
             if (!current->contains(part))
                 (*current)[part] = json::object();

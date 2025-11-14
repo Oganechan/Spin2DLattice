@@ -1,8 +1,6 @@
-#include <iostream>
 #include "core/simulation.h"
 
-int main()
-{
+int main() {
     Config config;
     config.load("../data/input/default.json");
 

@@ -1,20 +1,19 @@
 #pragma once
 
-#include <iostream>
-#include <chrono>
-#include "config.h"
-#include "data.h"
 #include "../algorithm/metropolis.h"
 #include "../lattice/atoms.h"
+#include "config.h"
+#include "data.h"
+#include <chrono>
+#include <iostream>
 
-class Simulation
-{
-public:
+class Simulation {
+  public:
     Simulation(const Config &config, const std::string &output_directory);
 
     void run();
 
-private:
+  private:
     lattice::Atoms atoms_;
     physics::Calculator calculator_;
     algorithm::Metropolis metropolis_;

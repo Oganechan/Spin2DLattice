@@ -1,13 +1,12 @@
 #pragma once
 
-#include <string>
-#include <fstream>
 #include "../lattice/atoms.h"
 #include "../physics/calculator.h"
+#include <fstream>
+#include <string>
 
-class Data
-{
-public:
+class Data {
+  public:
     Data(const std::string &output_path);
 
     void measure(const physics::Calculator &calculator);
@@ -17,7 +16,7 @@ public:
     inline double get_mean_energy() const { return mean_energy_; }
     inline double get_mean_magnetization() const { return mean_magnetization_; }
 
-private:
+  private:
     std::vector<double> energies_;
     std::vector<double> magnetizations_;
     std::vector<std::array<double, 3>> magnetization_vectors_;
