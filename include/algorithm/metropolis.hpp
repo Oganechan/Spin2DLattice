@@ -1,7 +1,8 @@
-#pragma once
+#ifndef METROPOLIS_HPP
+#define METROPOLIS_HPP
 
-#include "../lattice/atoms.h"
-#include "../physics/calculator.h"
+#include "../lattice/atoms.hpp"
+#include "../physics/calculator.hpp"
 
 namespace algorithm {
 
@@ -27,3 +28,5 @@ class Metropolis {
 };
 
 } // namespace algorithm
+
+#endif // METROPOLIS_HPP

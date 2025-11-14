@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CONFIG_HPP
+#define CONFIG_HPP
 
 #include "../../external/nlohmann/json.hpp"
 #include <fstream>
@@ -65,3 +66,5 @@ class Config {
         (*current)[k] = value;
     }
 };
+
+#endif // CONFIG_HPP

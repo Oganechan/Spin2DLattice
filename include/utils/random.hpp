@@ -1,4 +1,5 @@
-#pragma once
+#ifndef RANDOM_HPP
+#define RANDOM_HPP
 
 #include <chrono>
 #include <omp.h>
@@ -36,3 +37,5 @@ class Random {
         return dist(get_rng());
     }
 };
+
+#endif // RANDOM_HPP

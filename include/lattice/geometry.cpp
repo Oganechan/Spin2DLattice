@@ -1,4 +1,6 @@
-#include "geometry.h"
+#include "geometry.hpp"
+#include <algorithm>
+#include <cmath>
 
 lattice::Geometry::Geometry(const Config &config)
     : system_size_(config.get<int32_t>("lattice.system_size")),

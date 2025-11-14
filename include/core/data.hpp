@@ -1,8 +1,7 @@
-#pragma once
+#ifndef DATA_HPP
+#define DATA_HPP
 
-#include "../lattice/atoms.h"
-#include "../physics/calculator.h"
-#include <fstream>
+#include "../physics/calculator.hpp"
 #include <string>
 
 class Data {
@@ -30,3 +29,5 @@ class Data {
     void save_time_series() const;
     void save_statistics() const;
 };
+
+#endif // DATA_HPP

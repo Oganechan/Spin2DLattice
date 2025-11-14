@@ -1,4 +1,5 @@
-#include "calculator.h"
+#include "calculator.hpp"
+#include "../core/config.hpp"
 
 physics::Calculator::Calculator(const lattice::Atoms &atoms)
     : atoms_(atoms), geometry_(atoms.get_geometry()),

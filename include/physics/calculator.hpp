@@ -1,7 +1,7 @@
-#pragma once
+#ifndef CALCULATOR_HPP
+#define CALCULATOR_HPP
 
-#include "../core/config.h"
-#include "../lattice/atoms.h"
+#include "../lattice/atoms.hpp"
 
 namespace physics {
 
@@ -57,3 +57,5 @@ class Calculator {
 };
 
 } // namespace physics
+
+#endif

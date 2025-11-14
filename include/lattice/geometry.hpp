@@ -1,10 +1,9 @@
-#pragma once
+#ifndef GEOMETRY_HPP
+#define GEOMETRY_HPP
 
-#include "../core/config.h"
-#include "types.h"
-#include <algorithm>
+#include "../core/config.hpp"
+#include "types.hpp"
 #include <array>
-#include <cmath>
 #include <cstdint>
 #include <vector>
 
@@ -117,3 +116,5 @@ class Geometry {
 };
 
 } // namespace lattice
+
+#endif // GEOMETRY_HPP

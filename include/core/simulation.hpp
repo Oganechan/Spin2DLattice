@@ -1,11 +1,10 @@
-#pragma once
+#ifndef SIMULATION_HPP
+#define SIMULATION_HPP
 
-#include "../algorithm/metropolis.h"
-#include "../lattice/atoms.h"
-#include "config.h"
-#include "data.h"
-#include <chrono>
-#include <iostream>
+#include "../algorithm/metropolis.hpp"
+#include "../lattice/atoms.hpp"
+#include "config.hpp"
+#include "data.hpp"
 
 class Simulation {
   public:
@@ -29,3 +28,5 @@ class Simulation {
     void run_equilibration();
     void run_production();
 };
+
+#endif // SIMULATION_HPP

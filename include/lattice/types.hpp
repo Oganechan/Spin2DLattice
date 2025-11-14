@@ -1,4 +1,5 @@
-#pragma once
+#ifndef TYPES_HPP
+#define TYPES_HPP
 
 namespace lattice {
 
@@ -15,3 +16,5 @@ enum class CrystalType {
 enum class BoundaryType { PERIODIC, HARD };
 
 } // namespace lattice
+
+#endif // TYPES_HPP

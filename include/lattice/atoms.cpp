@@ -1,4 +1,4 @@
-#include "atoms.h"
+#include "atoms.hpp"
 
 lattice::Atoms::Atoms(const Config &config)
     : config_(config), geometry_(config) {

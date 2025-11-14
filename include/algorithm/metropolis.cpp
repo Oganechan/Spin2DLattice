@@ -1,4 +1,4 @@
-#include "metropolis.h"
+#include "metropolis.hpp"
 
 algorithm::Metropolis::Metropolis(lattice::Atoms &atoms)
     : atoms_(atoms), calculator_(atoms),

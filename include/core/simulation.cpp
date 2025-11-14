@@ -1,4 +1,6 @@
-#include "simulation.h"
+#include "simulation.hpp"
+#include <chrono>
+#include <iostream>
 
 Simulation::Simulation(const Config &config,
                        const std::string &output_directory)

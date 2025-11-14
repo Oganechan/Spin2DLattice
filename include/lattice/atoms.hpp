@@ -1,7 +1,8 @@
-#pragma once
+#ifndef ATOMS_HPP
+#define ATOMS_HPP
 
-#include "../utils/random.h"
-#include "geometry.h"
+#include "../utils/random.hpp"
+#include "geometry.hpp"
 
 namespace lattice {
 
@@ -119,3 +120,5 @@ class Atoms {
 };
 
 } // namespace lattice
+
+#endif // ATOMS_HPP

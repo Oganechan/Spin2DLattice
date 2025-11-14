@@ -1,4 +1,4 @@
-#include "core/simulation.h"
+#include "core/simulation.hpp"
 
 int main() {
     Config config;
