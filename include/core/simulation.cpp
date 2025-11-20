@@ -1,22 +1,24 @@
 #include "simulation.hpp"
+#include "config.hpp"
 #include <chrono>
+#include <cstdint>
 #include <iostream>
+#include <string>
 
 Simulation::Simulation(const Config &config,
                        const std::string &output_directory)
-    : output_directory_(output_directory), atoms_(config), calculator_(atoms_),
-      metropolis_(atoms_), data_(output_directory),
-      equilibration_sweeps_(
-          config.get<int32_t>("simulation.equilibration_sweeps")),
-      production_sweeps_(config.get<int32_t>("simulation.production_sweeps")),
-      measurement_interval_(
-          config.get<int32_t>("simulation.measurement_interval")) {}
+    : output_directory_(output_directory),
+      output_postfix_(
+          "_L" + std::to_string(config.get<int32_t>("lattice.system_size")) +
+          "_" + config.get<std::string>("lattice.crystal_type")),
+      atoms_(config), calculator_(atoms_), metropolis_(atoms_),
+      data_(output_directory),
+      number_measures_(config.get<int32_t>("simulation.number_measures")) {}
 
 void Simulation::run() {
     auto start_time = std::chrono::steady_clock::now();
 
-    initialize_system();
-    run_equilibration();
+    atoms_.initialize_random();
     run_production();
 
     auto end_time = std::chrono::steady_clock::now();
@@ -26,29 +28,19 @@ void Simulation::run() {
               << std::endl;
 }
 
-void Simulation::initialize_system() {
-    atoms_.initialize_random();
-    atoms_.set_random_defects(0.5);
-}
-
-void Simulation::run_equilibration() {
-    if (equilibration_sweeps_ <= 0)
-        return;
-
-    for (int32_t sweep = 0; sweep < equilibration_sweeps_; ++sweep) {
-        metropolis_.sweep();
-    }
-}
-
 void Simulation::run_production() {
-    data_.reset();
+    data_.reset(output_postfix_);
 
-    for (int32_t sweep = 0; sweep < production_sweeps_; ++sweep) {
-        metropolis_.sweep();
+    for (double c = 0.0; c <= 1.00; c += 0.01) {
+        for (int measure = 0; measure < number_measures_; ++measure) {
+            atoms_.set_random_defects(1.0 - c);
+            for (int32_t sweep = 0; sweep < atoms_.get_magnetic_count();
+                 ++sweep)
+                metropolis_.sweep();
 
-        if (sweep % measurement_interval_ == 0)
             data_.measure(calculator_);
-    }
+        }
 
-    data_.save();
+        data_.save(c);
+    }
 }

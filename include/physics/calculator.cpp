@@ -20,7 +20,7 @@ double physics::Calculator::calculate_total_energy() const {
     for (int32_t atom_id : magnetic_atoms)
         total_energy += calculate_atom_energy(atom_id);
 
-    return total_energy / 2.0;
+    return total_energy;
 }
 
 double physics::Calculator::calculate_atom_energy(int32_t atom_id) const {
@@ -34,7 +34,7 @@ double physics::Calculator::calculate_atom_energy(int32_t atom_id) const {
     for (int32_t shell_index = 0; shell_index < shell_count_; ++shell_index) {
         double J = get_exchange_constant(shell_index);
         for (int32_t neighbor_id : neighbor_table_[atom_id][shell_index])
-            if (atoms_.get_magnetic_state(neighbor_id))
+            if (neighbor_id > atom_id && atoms_.get_magnetic_state(neighbor_id))
                 energy -= J * calculate_spin_dot_product(
                                   atom_spin, atoms_.get_spin(neighbor_id));
     }

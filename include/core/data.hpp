@@ -9,8 +9,8 @@ class Data {
     Data(const std::string &output_path);
 
     void measure(const physics::Calculator &calculator);
-    void save();
-    void reset();
+    void save(double c);
+    void reset(std::string postfix);
 
     inline double get_mean_energy() const { return mean_energy_; }
     inline double get_mean_magnetization() const { return mean_magnetization_; }
@@ -24,10 +24,10 @@ class Data {
     double mean_magnetization_ = 0.0;
 
     std::string output_path_;
+    std::string output_postfix_;
 
     void compute_statistics();
-    void save_time_series() const;
-    void save_statistics() const;
+    void save_statistics(double c) const;
 };
 
 #endif // DATA_HPP

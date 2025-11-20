@@ -19,13 +19,10 @@ class Simulation {
     Data data_;
 
     std::string output_directory_;
+    std::string output_postfix_;
 
-    const int32_t equilibration_sweeps_;
-    const int32_t production_sweeps_;
-    const int32_t measurement_interval_;
+    const int32_t number_measures_;
 
-    void initialize_system();
-    void run_equilibration();
     void run_production();
 };
 
