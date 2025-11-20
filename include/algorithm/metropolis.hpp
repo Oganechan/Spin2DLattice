@@ -13,12 +13,19 @@ class Metropolis {
     void step();
     void sweep();
 
+    inline void set_temperature(double temperature) {
+        temperature_ = temperature;
+        update_beta();
+    }
+
   private:
     lattice::Atoms &atoms_;
     physics::Calculator calculator_;
 
     double temperature_;
     double beta_;
+
+    inline void update_beta() { beta_ = 1 / temperature_; }
 
     inline bool accept_change(double energy_difference) const {
         return energy_difference <= 0.0 ||
