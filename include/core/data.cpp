@@ -11,9 +11,13 @@ void Data::measure(const physics::Calculator &calculator) {
     magnetizations_.push_back(magnetization);
 }
 
-void Data::save(double c) {
+void Data::save(double c, double T) {
     compute_statistics();
-    save_statistics(c);
+
+    std::ofstream file(output_path_ + "/statistics" + output_postfix_ + ".dat",
+                       std::ios::app);
+    file << c << "\t" << T << "\t" << mean_energy_ << "\t"
+         << mean_magnetization_ << "\n";
 }
 
 void Data::reset(std::string postfix) {
@@ -40,10 +44,4 @@ void Data::compute_statistics() {
 
     mean_energy_ = energy_sum / energies_.size();
     mean_magnetization_ = magnetization_sum / magnetizations_.size();
-}
-
-void Data::save_statistics(double c) const {
-    std::ofstream file(output_path_ + "/statistics" + output_postfix_ + ".dat",
-                       std::ios::app);
-    file << c << "\t" << mean_energy_ << "\t" << mean_magnetization_ << "\n";
 }

@@ -5,6 +5,7 @@
 #include "../lattice/atoms.hpp"
 #include "config.hpp"
 #include "data.hpp"
+#include <string>
 
 class Simulation {
   public:
@@ -22,8 +23,14 @@ class Simulation {
     std::string output_postfix_;
 
     const int32_t number_measures_;
+    const std::string scan_type_;
+    const double fixed_temperature_;
+    const double fixed_concentration_;
 
     void run_production();
+    void run_single_simulation(double concentration, double temperature);
+    void run_temperature_scan();
+    void run_concentration_scan();
 };
 
 #endif // SIMULATION_HPP
