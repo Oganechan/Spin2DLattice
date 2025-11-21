@@ -2,6 +2,8 @@
 #define CALCULATOR_HPP
 
 #include "../lattice/atoms.hpp"
+#include <cstdint>
+#include <vector>
 
 namespace physics {
 
@@ -42,10 +44,10 @@ class Calculator {
     const std::vector<double> exchange_constants_;
     const std::array<double, 3> external_magnetic_field_;
 
-    inline double get_exchange_constant(int32_t shell_index) const {
-        if (shell_index < 0 || shell_index >= exchange_constants_.size())
-            throw std::out_of_range("Shell index out of range");
+    mutable std::vector<int32_t> magnetic_atoms_;
+    mutable bool magnetic_atoms_valid_ = false;
 
+    inline double get_exchange_constant(int32_t shell_index) const {
         return exchange_constants_[shell_index];
     }
 
@@ -54,8 +56,11 @@ class Calculator {
                                const std::array<double, 3> &spin2) const {
         return spin1[0] * spin2[0] + spin1[1] * spin2[1] + spin1[2] * spin2[2];
     }
+
+    const std::vector<int32_t> &get_magnetic_atoms_cached() const;
+    void update_magnetic_cache() const;
 };
 
 } // namespace physics
 
-#endif
+#endif // CALCULATOR_HPP
