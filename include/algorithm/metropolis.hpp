@@ -15,7 +15,7 @@ class Metropolis {
 
     inline void set_temperature(double temperature) {
         temperature_ = temperature;
-        update_beta();
+        beta_ = 1.0 / temperature_;
     }
 
   private:
@@ -25,12 +25,14 @@ class Metropolis {
     double temperature_;
     double beta_;
 
-    inline void update_beta() { beta_ = 1 / temperature_; }
-
     inline bool accept_change(double energy_difference) const {
-        return energy_difference <= 0.0 ||
-               Random::uniform_real<double>() <=
-                   std::exp(-energy_difference * beta_);
+        if (energy_difference <= 0)
+            return true;
+
+        const double random_value = Random::uniform_real<double>();
+        const double threshold = std::exp(-energy_difference * beta_);
+
+        return random_value <= threshold;
     }
 };
 
