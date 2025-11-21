@@ -3,6 +3,8 @@
 
 #include "../utils/random.hpp"
 #include "geometry.hpp"
+#include <cstdint>
+#include <vector>
 
 namespace lattice {
 
@@ -15,22 +17,18 @@ class Atoms {
     // Sets the magnetic state of an atom (true = magnetic, false =
     // non-magnetic)
     inline void set_magnetic_state(int32_t atom_id, bool is_magnetic) {
-        if (atom_id < 0 || atom_id >= geometry_.get_atom_count())
-            throw std::out_of_range("Atom ID out of range");
-
         magnetic_mask_[atom_id] = is_magnetic;
     }
 
     // Returns the magnetic state of the specified atom
     inline bool get_magnetic_state(int32_t atom_id) const {
-        if (atom_id < 0 || atom_id >= geometry_.get_atom_count())
-            throw std::out_of_range("Atom ID out of range");
-
         return magnetic_mask_[atom_id];
     }
 
     // Returns a vector representing the magnetic mask for all atoms
-    const std::vector<bool> get_magnetic_mask() { return magnetic_mask_; }
+    const std::vector<bool> &get_magnetic_mask() const {
+        return magnetic_mask_;
+    }
 
     // Randomly sets atoms as non-magnetic atoms with given concentration
     void set_random_defects(double defect_concentration);
@@ -38,58 +36,61 @@ class Atoms {
     // === SYSTEM STATISTICS ===
 
     // Returns the total number of magnetic atoms in the system
-    int32_t get_magnetic_count() const;
+    inline int32_t get_magnetic_count() const { return magnetic_count_; }
 
     // Returns the total number of non-magnetic atoms in the system
-    int32_t get_defect_count() const;
+    inline int32_t get_defect_count() const {
+        return geometry_.get_atom_count() - magnetic_count_;
+    }
 
     // Returns a list of atom IDs that are magnetic
-    std::vector<int32_t> get_magnetic_atoms() const;
+    inline const std::vector<int32_t> &get_magnetic_atoms() const {
+        return magnetic_atoms_;
+    }
 
     // Returns a list of atom IDs that are non-magnetic
-    std::vector<int32_t> get_defect_atoms() const;
+    inline const std::vector<int32_t> &get_defect_atoms() const {
+        return defect_atoms_;
+    }
 
     // === WORKING WITH SPINS ===
 
     // Returns the spin vector of the specified atom
     inline std::array<double, 3> get_spin(int32_t atom_id) const {
-        if (atom_id < 0 || atom_id >= geometry_.get_atom_count())
-            throw std::out_of_range("Atom ID out of range");
-        if (!magnetic_mask_[atom_id])
-            throw std::invalid_argument("Atom is not magnetic");
-
         return spin_vectors_[atom_id];
     }
 
     // Sets the spin vector for the specified atom
     inline void set_spin(int32_t atom_id,
                          const std::array<double, 3> &spin_vector) {
-        if (atom_id < 0 || atom_id >= geometry_.get_atom_count())
-            throw std::out_of_range("Atom ID out of range");
-        if (!magnetic_mask_[atom_id])
-            throw std::invalid_argument(
-                "Cannot set spin for non-magnetic atom");
-
         double norm = std::sqrt(spin_vector[0] * spin_vector[0] +
                                 spin_vector[1] * spin_vector[1] +
                                 spin_vector[2] * spin_vector[2]);
 
-        spin_vectors_[atom_id] = {spin_vector[0] / norm, spin_vector[1] / norm,
-                                  spin_vector[2] / norm};
+        spin_vectors_[atom_id][0] = spin_vector[0] / norm;
+        spin_vectors_[atom_id][1] = spin_vector[1] / norm;
+        spin_vectors_[atom_id][2] = spin_vector[2] / norm;
     }
 
     // Returns normalized spin vector [x, y, z] with ||spin|| = 1.0
     inline std::array<double, 3> generate_random_spin() const {
-        double x = Random::uniform_real(-1.0, 1.0);
-        double y = Random::uniform_real(-1.0, 1.0);
-        double z = Random::uniform_real(-1.0, 1.0);
-        double norm = std::sqrt(x * x + y * y + z * z);
+        double x, y, z, norm;
+        do {
+            x = Random::uniform_real(-1.0, 1.0);
+            y = Random::uniform_real(-1.0, 1.0);
+            z = Random::uniform_real(-1.0, 1.0);
+            norm = x * x + y * y + z * z;
+        } while (norm == 0.0 || norm > 1.0);
+        norm = std::sqrt(norm);
 
         return {x / norm, y / norm, z / norm};
     }
 
     //
-    int32_t select_random_magnetic_atom() const;
+    inline int32_t select_random_magnetic_atom() const {
+        return magnetic_atoms_[Random::uniform_int<int32_t>(
+            0, magnetic_atoms_.size() - 1)];
+    }
 
     // === INITIALIZING CONFIGURATIONS ===
 
@@ -116,7 +117,13 @@ class Atoms {
     std::vector<std::array<double, 3>> spin_vectors_;
     std::vector<bool> magnetic_mask_;
 
+    mutable int32_t magnetic_count_ = 0;
+    mutable std::vector<int32_t> magnetic_atoms_;
+    mutable std::vector<int32_t> defect_atoms_;
+    mutable bool cache_valid_ = false;
+
     void initialize_spins();
+    void update_cache_data() const;
 };
 
 } // namespace lattice

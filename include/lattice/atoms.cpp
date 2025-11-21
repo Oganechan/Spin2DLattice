@@ -1,4 +1,7 @@
 #include "atoms.hpp"
+#include <algorithm>
+#include <array>
+#include <cstdint>
 
 lattice::Atoms::Atoms(const Config &config)
     : config_(config), geometry_(config) {
@@ -9,9 +12,10 @@ void lattice::Atoms::initialize_spins() {
     int32_t num_atoms = geometry_.get_atom_count();
     spin_vectors_.resize(num_atoms);
     magnetic_mask_.resize(num_atoms, true);
+    magnetic_atoms_.reserve(num_atoms);
+    defect_atoms_.reserve(num_atoms);
 
-    for (auto &spin : spin_vectors_)
-        spin = {0.0, 0.0, 0.0};
+    update_cache_data();
 }
 
 // === DEFECT MANAGEMENT ===
@@ -26,61 +30,19 @@ void lattice::Atoms::set_random_defects(double defect_concentration) {
     int32_t defect_count =
         static_cast<int32_t>(defect_concentration * num_atoms);
 
-    std::vector<int32_t> indices(num_atoms);
-    for (int32_t i = 0; i < num_atoms; ++i)
-        indices[i] = i;
-    std::shuffle(indices.begin(), indices.end(), Random::get_rng());
+    // Fisher–Yates shuffle
+    for (int32_t i = num_atoms - 1; i > 0; --i) {
+        int32_t j = Random::uniform_int(0, i);
+
+        bool temp = magnetic_mask_[i];
+        magnetic_mask_[i] = magnetic_mask_[j];
+        magnetic_mask_[j] = temp;
+    }
 
     for (int32_t i = 0; i < defect_count; ++i)
-        magnetic_mask_[indices[i]] = false;
-}
+        magnetic_mask_[i] = false;
 
-// === SYSTEM STATISTICS ===
-
-int32_t lattice::Atoms::get_magnetic_count() const {
-    int32_t count = 0;
-    for (bool is_magnetic : magnetic_mask_)
-        count += is_magnetic;
-
-    return count;
-}
-
-int32_t lattice::Atoms::get_defect_count() const {
-    int32_t count = 0;
-    for (bool is_magnetic : magnetic_mask_)
-        count += !is_magnetic;
-
-    return count;
-}
-
-std::vector<int32_t> lattice::Atoms::get_magnetic_atoms() const {
-    std::vector<int32_t> magnetic_atoms;
-    magnetic_atoms.reserve(magnetic_mask_.size());
-
-    for (int32_t i = 0; i < magnetic_mask_.size(); ++i)
-        if (magnetic_mask_[i])
-            magnetic_atoms.push_back(i);
-
-    return magnetic_atoms;
-}
-
-std::vector<int32_t> lattice::Atoms::get_defect_atoms() const {
-    std::vector<int32_t> defect_atoms;
-    defect_atoms.reserve(magnetic_mask_.size());
-
-    for (int32_t i = 0; i < magnetic_mask_.size(); ++i)
-        if (!magnetic_mask_[i])
-            defect_atoms.push_back(i);
-
-    return defect_atoms;
-}
-
-// === WORKING WITH SPINS ===
-
-int32_t lattice::Atoms::select_random_magnetic_atom() const {
-    const auto &magnetic_atoms = get_magnetic_atoms();
-    return magnetic_atoms[Random::uniform_int<int32_t>(
-        0, magnetic_atoms.size() - 1)];
+    update_cache_data();
 }
 
 // === INITIALIZING CONFIGURATIONS ===
@@ -92,8 +54,9 @@ void lattice::Atoms::initialize_random() {
 }
 
 void lattice::Atoms::initialize_ferromagnetic() {
+    const std::array<double, 3> spin = {0.0, 0.0, 1.0};
     for (int32_t i = 0; i < geometry_.get_atom_count(); ++i)
-        spin_vectors_[i] = {0.0, 0.0, 1.0};
+        spin_vectors_[i] = spin;
 }
 
 void lattice::Atoms::initialize_antiferromagnetic() {
@@ -102,4 +65,27 @@ void lattice::Atoms::initialize_antiferromagnetic() {
         bool spin_up = (cell_i + cell_j + atom_in_cell_id) % 2 == 0;
         spin_vectors_[i] = {0.0, 0.0, spin_up ? 1.0 : -1.0};
     }
+}
+
+void lattice::Atoms::update_cache_data() const {
+    int32_t num_atoms = geometry_.get_atom_count();
+
+    magnetic_count_ = 0;
+    magnetic_atoms_.clear();
+    defect_atoms_.clear();
+
+    magnetic_atoms_.reserve(num_atoms);
+    defect_atoms_.reserve(num_atoms);
+
+    for (int32_t i = 0; i < num_atoms; ++i) {
+        if (magnetic_mask_[i]) {
+            magnetic_atoms_.push_back(i);
+            ++magnetic_count_;
+        } else
+            defect_atoms_.push_back(i);
+    }
+
+    magnetic_atoms_.shrink_to_fit();
+    defect_atoms_.shrink_to_fit();
+    cache_valid_ = true;
 }
