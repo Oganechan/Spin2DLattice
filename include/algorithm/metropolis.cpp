@@ -19,7 +19,7 @@ void algorithm::Metropolis::step() {
 }
 
 void algorithm::Metropolis::sweep() {
-    int32_t magnetic_count = atoms_.get_magnetic_count();
+    int32_t magnetic_count = atoms_.get_magnetic_count() * 10;
 
     while (--magnetic_count > 0)
         step();

@@ -21,7 +21,9 @@ Simulation::Simulation(const Config &config,
 void Simulation::run() {
     auto start_time = std::chrono::steady_clock::now();
 
-    atoms_.initialize_ferromagnetic();
+    atoms_.initialize_random();
+    metropolis_.sweep();
+
     if (scan_type_ == "temperature")
         run_temperature_scan();
     else
@@ -42,16 +44,14 @@ void Simulation::run_single_simulation(double concentration,
     metropolis_.set_temperature(temperature);
 
     for (int32_t measure = 0; measure < number_measures_; ++measure) {
-        for (int32_t sweep = 0; sweep < atoms_.get_magnetic_count() * 10;
-             ++sweep)
-            metropolis_.sweep();
+        metropolis_.sweep();
         data_.measure(calculator_);
     }
     data_.save(concentration, temperature);
 }
 
 void Simulation::run_temperature_scan() {
-    for (double T = 0.1; T <= 10.0; T += 0.1)
+    for (double T = 0.1; T <= 2.0; T += 0.1)
         run_single_simulation(fixed_concentration_, T);
 }
 
