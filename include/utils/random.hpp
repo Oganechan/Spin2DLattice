@@ -9,9 +9,16 @@
 class Random {
   public:
     static std::mt19937 &get_rng() {
-        static thread_local std::random_device rd;
-        static thread_local std::mt19937 rng(rd());
+        thread_local std::mt19937 rng = []() {
+            std::random_device rd;
+            return std::mt19937(rd());
+        }();
         return rng;
+    }
+
+    static void initialize() {
+        std::random_device rd;
+        get_rng().seed(rd());
     }
 
     static void initialize(uint32_t seed) { get_rng().seed(seed); }
@@ -36,6 +43,9 @@ class Random {
         std::bernoulli_distribution dist(p);
         return dist(get_rng());
     }
+
+  private:
+    static std::mt19937 rng;
 };
 
 #endif // RANDOM_HPP
