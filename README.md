@@ -36,8 +36,8 @@ g++ ../include/core/data.cpp ../include/core/simulation.cpp ../include/lattice/a
 ```json
 {
     "lattice": {
-        "crystal_type": "triangular",
-        "system_size": 10,
+        "crystal_type": "rectangular",
+        "system_size": 20,
         "lattice_constant_a": 1.0,
         "lattice_constant_b": 1.0,
         "boundary_type": "periodic"
@@ -51,10 +51,18 @@ g++ ../include/core/data.cpp ../include/core/simulation.cpp ../include/lattice/a
         "exchange_constants": [
             1.0
         ],
-        "temperature": 0.5
+        "temperature": 100.0,
+        "concentration": 1.0
     },
     "simulation": {
-        "number_measures": 100
+        "number_measures": 1000,
+        "scan_type": "temperature",
+        "scan_start": 0.0,
+        "scan_step": 0.1,
+        "scan_end": 3.0
+    },
+    "material": {
+        "name": "test"
     }
 }
 ```
