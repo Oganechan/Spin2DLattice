@@ -6,25 +6,26 @@
 
 class Data {
   public:
-    Data(const std::string &output_path);
+    Data(const physics::Calculator &calculator, const std::string &output_path);
 
-    void measure(const physics::Calculator &calculator);
-    void save(double c, double T);
-    void reset(std::string postfix);
+    void measure();
+    void save();
+    void reset();
 
     inline double get_mean_energy() const { return mean_energy_; }
     inline double get_mean_magnetization() const { return mean_magnetization_; }
 
   private:
+    const physics::Calculator &calculator_;
+
+    const std::string &output_path_;
+
     std::vector<double> energies_;
     std::vector<double> magnetizations_;
     std::vector<std::array<double, 3>> magnetization_vectors_;
 
     double mean_energy_ = 0.0;
     double mean_magnetization_ = 0.0;
-
-    std::string output_path_;
-    std::string output_postfix_;
 
     void compute_statistics();
 };
