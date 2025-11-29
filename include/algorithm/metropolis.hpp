@@ -8,32 +8,16 @@ namespace algorithm {
 
 class Metropolis {
   public:
-    Metropolis(lattice::Atoms &atoms);
+    Metropolis(lattice::Atoms &atoms, const physics::Calculator &calculator);
 
     void step();
     void sweep();
 
-    inline void set_temperature(double temperature) {
-        temperature_ = temperature;
-        beta_ = 1.0 / temperature_;
-    }
-
   private:
     lattice::Atoms &atoms_;
-    physics::Calculator calculator_;
+    const physics::Calculator &calculator_;
 
-    double temperature_;
-    double beta_;
-
-    inline bool accept_change(double energy_difference) const {
-        if (energy_difference <= 0)
-            return true;
-
-        const double random_value = Random::uniform_real<double>();
-        const double threshold = std::exp(-energy_difference * beta_);
-
-        return random_value <= threshold;
-    }
+    bool accept_change(double energy_difference) const;
 };
 
 } // namespace algorithm
