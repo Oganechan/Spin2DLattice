@@ -19,16 +19,14 @@ class Simulation {
     algorithm::Metropolis metropolis_;
     Data data_;
 
-    std::string output_directory_;
-    std::string output_postfix_;
+    const std::string output_directory_;
 
     const int32_t number_measures_;
     const std::string scan_type_;
-    const double fixed_temperature_;
-    const double fixed_concentration_;
+    const double scan_start_, scan_step_, scan_end_;
 
     void run_production();
-    void run_single_simulation(double concentration, double temperature);
+    void run_single_simulation();
     void run_temperature_scan();
     void run_concentration_scan();
 };
