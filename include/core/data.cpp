@@ -1,34 +1,34 @@
 #include "data.hpp"
 #include <fstream>
 
-Data::Data(const std::string &output_path) : output_path_(output_path) {}
+Data::Data(const physics::Calculator &calculator,
+           const std::string &output_path)
+    : calculator_(calculator), output_path_(output_path) {}
 
-void Data::measure(const physics::Calculator &calculator) {
-    double energy = calculator.calculate_total_energy();
-    double magnetization = calculator.calculate_total_magnetization();
+void Data::measure() {
+    double energy = calculator_.calculate_total_energy();
+    double magnetization = calculator_.calculate_total_magnetization();
 
     energies_.push_back(energy);
     magnetizations_.push_back(magnetization);
 }
 
-void Data::save(double c, double T) {
+void Data::save() {
     compute_statistics();
 
-    std::ofstream file(output_path_ + "/statistics" + output_postfix_ + ".dat",
-                       std::ios::app);
-    file << c << "\t" << T << "\t" << mean_energy_ << "\t"
+    std::ofstream file(output_path_, std::ios::app);
+    file << calculator_.get_concentration() << "\t"
+         << calculator_.get_temperature() << "\t" << mean_energy_ << "\t"
          << mean_magnetization_ << "\n";
 }
 
-void Data::reset(std::string postfix) {
+void Data::reset() {
     energies_.clear();
     magnetizations_.clear();
     magnetization_vectors_.clear();
 
     mean_energy_ = 0.0;
     mean_magnetization_ = 0.0;
-
-    output_postfix_ = postfix;
 }
 
 void Data::compute_statistics() {
