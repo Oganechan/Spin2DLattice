@@ -43,6 +43,7 @@ lattice::Geometry::parse_boundary_type(const std::string &boundary) {
 
     if (auto it = mapping.find(boundary); it != mapping.end())
         return it->second;
+
     throw std::invalid_argument("Unknown boundary type: " + boundary);
 }
 
