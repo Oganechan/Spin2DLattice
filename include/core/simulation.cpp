@@ -7,22 +7,28 @@
 
 Simulation::Simulation(const Config &config,
                        const std::string &output_directory)
-    : output_directory_(output_directory),
-      output_postfix_(
-          "_L" + std::to_string(config.get<int32_t>("lattice.system_size")) +
-          "_" + config.get<std::string>("lattice.crystal_type")),
-      atoms_(config), calculator_(atoms_), metropolis_(atoms_),
-      data_(output_directory),
+    : atoms_(config), calculator_(atoms_, config),
+      metropolis_(atoms_, calculator_),
+      output_directory_(
+          output_directory + "/" + config.get<std::string>("material.name") +
+          "/L" + std::to_string(config.get<int32_t>("lattice.system_size")) +
+          "_N" +
+          std::to_string(config.get<int32_t>("simulation.number_measures")) +
+          ".dat"),
+      data_(calculator_, output_directory_),
       number_measures_(config.get<int32_t>("simulation.number_measures")),
       scan_type_(config.get<std::string>("simulation.scan_type")),
-      fixed_temperature_(config.get<double>("physical.temperature")),
-      fixed_concentration_(config.get<double>("physical.concentration")) {}
+      scan_start_(config.get<double>("simulation.scan_start")),
+      scan_step_(config.get<double>("simulation.scan_step")),
+      scan_end_(config.get<double>("simulation.scan_end")) {
+    std::filesystem::create_directories(
+        output_directory + "/" + config.get<std::string>("material.name"));
+}
 
 void Simulation::run() {
     auto start_time = std::chrono::steady_clock::now();
 
-    atoms_.initialize_random();
-    metropolis_.sweep();
+    std::ofstream file(output_directory_, std::ios::trunc);
 
     if (scan_type_ == "temperature")
         run_temperature_scan();
@@ -36,26 +42,33 @@ void Simulation::run() {
               << std::endl;
 }
 
-void Simulation::run_single_simulation(double concentration,
-                                       double temperature) {
-    data_.reset(output_postfix_);
+void Simulation::run_single_simulation() {
+    data_.reset();
 
-    atoms_.set_random_defects(1 - concentration);
-    metropolis_.set_temperature(temperature);
+    for (int32_t term = 0; term < atoms_.get_magnetic_count(); ++term)
+        metropolis_.sweep();
 
     for (int32_t measure = 0; measure < number_measures_; ++measure) {
         metropolis_.sweep();
-        data_.measure(calculator_);
+        data_.measure();
     }
-    data_.save(concentration, temperature);
+
+    data_.save();
 }
 
 void Simulation::run_temperature_scan() {
-    for (double T = 0.1; T <= 2.0; T += 0.1)
-        run_single_simulation(fixed_concentration_, T);
+    atoms_.set_random_defects(1.0 - calculator_.get_concentration());
+
+    for (double T = scan_start_; T <= scan_end_ + 1e-5; T += scan_step_) {
+        calculator_.set_temperature(T);
+        atoms_.initialize_ferromagnetic();
+        run_single_simulation();
+    }
 }
 
 void Simulation::run_concentration_scan() {
-    for (double c = 0.0; c <= 1.0; c += 0.01)
-        run_single_simulation(c, fixed_temperature_);
+    for (double c = scan_start_; c <= scan_end_ + 1e-5; c += scan_step_) {
+        atoms_.set_random_defects(1.0 - c);
+        run_single_simulation();
+    }
 }
