@@ -3,6 +3,8 @@
 
 #include "../utils/random.hpp"
 #include "geometry.hpp"
+#include <array>
+#include <cmath>
 #include <cstdint>
 #include <vector>
 
@@ -12,7 +14,11 @@ class Atoms {
   public:
     explicit Atoms(const Config &config);
 
-    // === DEFECT MANAGEMENT ===
+    void set_random_defects(double defect_concentration);
+    std::array<double, 3> small_rotate_spin(int32_t atom_id);
+    void initialize_random();
+    void initialize_ferromagnetic();
+    void initialize_antiferromagnetic();
 
     // Sets the magnetic state of an atom (true = magnetic, false =
     // non-magnetic)
@@ -26,14 +32,9 @@ class Atoms {
     }
 
     // Returns a vector representing the magnetic mask for all atoms
-    const std::vector<bool> &get_magnetic_mask() const {
+    inline const std::vector<bool> &get_magnetic_mask() const {
         return magnetic_mask_;
     }
-
-    // Randomly sets atoms as non-magnetic atoms with given concentration
-    void set_random_defects(double defect_concentration);
-
-    // === SYSTEM STATISTICS ===
 
     // Returns the total number of magnetic atoms in the system
     inline int32_t get_magnetic_count() const { return magnetic_count_; }
@@ -52,8 +53,6 @@ class Atoms {
     inline const std::vector<int32_t> &get_defect_atoms() const {
         return defect_atoms_;
     }
-
-    // === WORKING WITH SPINS ===
 
     // Returns the spin vector of the specified atom
     inline std::array<double, 3> get_spin(int32_t atom_id) const {
@@ -74,53 +73,34 @@ class Atoms {
 
     // Returns normalized spin vector [x, y, z] with ||spin|| = 1.0
     inline std::array<double, 3> generate_random_spin() const {
-        double x, y, z, norm;
-        do {
-            x = Random::uniform_real(-1.0, 1.0);
-            y = Random::uniform_real(-1.0, 1.0);
-            z = Random::uniform_real(-1.0, 1.0);
-            norm = x * x + y * y + z * z;
-        } while (norm == 0.0 || norm > 1.0);
-        norm = std::sqrt(norm);
+        double phi = Random::uniform_real<double>(0, 2 * M_PI);
+        double theta = Random::uniform_real<double>(0, M_PI);
 
-        return {x / norm, y / norm, z / norm};
+        double x = std::sin(theta) * std::cos(phi);
+        double y = std::sin(theta) * std::sin(phi);
+        double z = std::cos(theta);
+
+        return {x, y, z};
     }
 
-    //
+    // Returns random magnetic atom
     inline int32_t select_random_magnetic_atom() const {
         return magnetic_atoms_[Random::uniform_int<int32_t>(
             0, magnetic_atoms_.size() - 1)];
     }
 
-    // === INITIALIZING CONFIGURATIONS ===
-
-    // Initializes all magnetic spins with random orientations
-    void initialize_random();
-
-    // Initializes all magnetic spins in ferromagnetic alignment (+z direction)
-    void initialize_ferromagnetic();
-
-    // Initializes magnetic spins in antiferromagnetic pattern (+-z alternating
-    // direction)
-    void initialize_antiferromagnetic();
-
-    // Returns the configuration object
-    inline const Config &get_config() const { return config_; }
-
     // Returns the geometry object
     inline const Geometry &get_geometry() const { return geometry_; }
 
   private:
-    const Config &config_;
     const Geometry geometry_;
 
     std::vector<std::array<double, 3>> spin_vectors_;
     std::vector<bool> magnetic_mask_;
 
-    mutable int32_t magnetic_count_ = 0;
+    mutable int32_t magnetic_count_;
     mutable std::vector<int32_t> magnetic_atoms_;
     mutable std::vector<int32_t> defect_atoms_;
-    mutable bool cache_valid_ = false;
 
     void initialize_spins();
     void update_cache_data() const;
