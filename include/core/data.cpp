@@ -25,7 +25,6 @@ void Data::save() {
 void Data::reset() {
     energies_.clear();
     magnetizations_.clear();
-    magnetization_vectors_.clear();
 
     mean_energy_ = 0.0;
     mean_magnetization_ = 0.0;

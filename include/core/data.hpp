@@ -22,7 +22,6 @@ class Data {
 
     std::vector<double> energies_;
     std::vector<double> magnetizations_;
-    std::vector<std::array<double, 3>> magnetization_vectors_;
 
     double mean_energy_ = 0.0;
     double mean_magnetization_ = 0.0;
