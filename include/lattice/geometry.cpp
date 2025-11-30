@@ -1,6 +1,10 @@
 #include "geometry.hpp"
+#include "types.hpp"
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <utility>
+#include <vector>
 
 lattice::Geometry::Geometry(const Config &config)
     : system_size_(config.get<int32_t>("lattice.system_size")),
@@ -207,59 +211,69 @@ void lattice::Geometry::compute_neighbors() {
     for (auto &atom_neighbors : neighbor_table_)
         atom_neighbors.resize(shell_count_);
 
-    std::vector<std::pair<int32_t, int32_t>> displacements;
-    for (int32_t di = -shell_count_; di <= shell_count_; ++di)
-        for (int32_t dj = -shell_count_; dj <= shell_count_; ++dj)
-            if (di * di + dj * dj <= shell_count_ * shell_count_)
-                displacements.emplace_back(di, dj);
+    int32_t max_cell_search = shell_count_ * 2;
 
     for (int32_t atom_id = 0; atom_id < atom_count_; ++atom_id) {
         std::vector<std::pair<int32_t, double>> atom_neighbors;
 
         auto [cell_i, cell_j, atom_in_cell_id] = atom_indices_[atom_id];
 
-        for (const auto &[di, dj] : displacements) {
-            for (int32_t new_atom_in_cell_id = 0;
-                 new_atom_in_cell_id < basis_count_; ++new_atom_in_cell_id) {
-                int32_t neighbor_id =
-                    get_atom_id(cell_i + di, cell_j + dj, new_atom_in_cell_id);
+        for (int32_t di = -max_cell_search; di <= max_cell_search; ++di)
+            for (int32_t dj = -max_cell_search; dj <= max_cell_search; ++dj)
+                for (int32_t new_atom_in_cell_id = 0;
+                     new_atom_in_cell_id < basis_count_;
+                     ++new_atom_in_cell_id) {
 
-                if (neighbor_id < 0 || neighbor_id >= atom_count_ ||
-                    neighbor_id == atom_id)
-                    continue;
+                    int32_t neighbor_id = get_atom_id(cell_i + di, cell_j + dj,
+                                                      new_atom_in_cell_id);
 
-                if (boundary_type_ == BoundaryType::HARD) {
-                    auto [ni, nj, npos] = atom_indices_[neighbor_id];
-                    if (ni < 0 || ni >= system_size_ || nj < 0 ||
-                        nj >= system_size_)
+                    if (neighbor_id < 0 || neighbor_id >= atom_count_ ||
+                        atom_id == neighbor_id)
                         continue;
-                }
 
-                double distance = get_distance(atom_id, neighbor_id);
-                atom_neighbors.emplace_back(neighbor_id, distance);
-            }
-        }
+                    if (boundary_type_ == BoundaryType::HARD) {
+                        auto [ni, nj, pos] = atom_indices_[neighbor_id];
+                        if (ni < 0 || nj >= system_size_ || nj < 0 ||
+                            nj >= system_size_)
+                            continue;
+                    }
+
+                    double distance = get_distance(atom_id, neighbor_id);
+                    atom_neighbors.emplace_back(neighbor_id, distance);
+                }
 
         std::sort(
             atom_neighbors.begin(), atom_neighbors.end(),
             [](const auto &a, const auto &b) { return a.second < b.second; });
 
-        if (atom_neighbors.empty())
-            continue;
+        for (int32_t shell = 0; shell < shell_count_; ++shell) {
+            double target_distance = double(shell + 1);
 
-        double current_distance = atom_neighbors[0].second;
-        int32_t current_shell = 0;
+            for (const auto &[neighbor_id, distance] : atom_neighbors) {
+                if (target_distance - distance >= 0.0) {
+                    bool is_duplicate = false;
 
-        for (const auto &[neighbor_id, distance] : atom_neighbors) {
-            if (std::abs(distance - current_distance) >
-                1e-5 * current_distance) {
-                current_distance = distance;
-                current_shell++;
-                if (current_shell >= shell_count_)
-                    break;
+                    for (int32_t smaller_shell = 0; smaller_shell < shell;
+                         ++smaller_shell) {
+                        for (const auto &existing_id :
+                             neighbor_table_[atom_id][smaller_shell])
+                            if (existing_id == neighbor_id) {
+                                is_duplicate = true;
+                                break;
+                            }
+                        if (is_duplicate)
+                            break;
+                    }
+
+                    if (!is_duplicate)
+                        neighbor_table_[atom_id][shell].emplace_back(
+                            neighbor_id);
+                }
             }
-            if (current_shell < shell_count_)
-                neighbor_table_[atom_id][current_shell].push_back(neighbor_id);
         }
+
+        for (int32_t shell = 0; shell < shell_count_; ++shell)
+            std::sort(neighbor_table_[atom_id][shell].begin(),
+                      neighbor_table_[atom_id][shell].end());
     }
 }
