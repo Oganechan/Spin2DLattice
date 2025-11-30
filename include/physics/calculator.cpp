@@ -68,23 +68,6 @@ double physics::Calculator::calculate_atom_energy(int32_t atom_id) const {
     return energy;
 }
 
-// Calculates the exchange energy between two specific atoms
-double
-physics::Calculator::calculate_pair_energy(int32_t first_atom_id,
-                                           int32_t second_atom_id) const {
-    if (!atoms_.get_magnetic_state(first_atom_id) ||
-        !atoms_.get_magnetic_state(second_atom_id))
-        return 0.0;
-
-    const auto &spin1 = atoms_.get_spin(first_atom_id);
-    const auto &spin2 = atoms_.get_spin(second_atom_id);
-
-    double distance = geometry_.get_distance(first_atom_id, second_atom_id);
-    double J = get_exchange_constant(static_cast<int32_t>(distance));
-
-    return -J * calculate_spin_dot_product(spin1, spin2);
-}
-
 // Calculates the energy difference if the specified atom's spin were
 // flipped
 double physics::Calculator::calculate_flip_energy_difference(

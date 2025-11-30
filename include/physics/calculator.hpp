@@ -13,8 +13,6 @@ class Calculator {
 
     double calculate_total_energy() const;
     double calculate_atom_energy(int32_t atom_id) const;
-    double calculate_pair_energy(int32_t first_atom_id,
-                                 int32_t second_atom_id) const;
     double calculate_flip_energy_difference(
         int32_t atom_id, const std::array<double, 3> &new_spin) const;
     double calculate_total_magnetization() const;
