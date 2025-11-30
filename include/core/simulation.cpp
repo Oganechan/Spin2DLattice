@@ -58,10 +58,10 @@ void Simulation::run_single_simulation() {
 
 void Simulation::run_temperature_scan() {
     atoms_.set_random_defects(1.0 - calculator_.get_concentration());
+    atoms_.initialize_random();
 
-    for (double T = scan_start_; T <= scan_end_ + 1e-5; T += scan_step_) {
+    for (double T = scan_end_; T >= scan_start_ - 1e-5; T -= scan_step_) {
         calculator_.set_temperature(T);
-        atoms_.initialize_ferromagnetic();
         run_single_simulation();
     }
 }
