@@ -3,6 +3,7 @@
 
 #include "../lattice/atoms.hpp"
 #include "../physics/calculator.hpp"
+#include <cstdint>
 
 namespace algorithm {
 
@@ -12,6 +13,7 @@ class Metropolis {
 
     void step();
     void sweep();
+    void sweep(int32_t step_count);
 
   private:
     lattice::Atoms &atoms_;

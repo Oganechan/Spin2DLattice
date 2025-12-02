@@ -45,8 +45,7 @@ void Simulation::run() {
 void Simulation::run_single_simulation() {
     data_.reset();
 
-    for (int32_t term = 0; term < atoms_.get_magnetic_count(); ++term)
-        metropolis_.sweep();
+    metropolis_.sweep(10 * atoms_.get_magnetic_count());
 
     for (int32_t measure = 0; measure < number_measures_; ++measure) {
         metropolis_.sweep();

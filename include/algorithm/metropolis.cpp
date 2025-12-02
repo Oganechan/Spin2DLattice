@@ -1,4 +1,5 @@
 #include "metropolis.hpp"
+#include <cstdint>
 
 algorithm::Metropolis::Metropolis(lattice::Atoms &atoms,
                                   const physics::Calculator &calculator)
@@ -20,6 +21,11 @@ void algorithm::Metropolis::step() {
 void algorithm::Metropolis::sweep() {
     int32_t step_count = atoms_.get_magnetic_count();
 
+    while (step_count-- > 0)
+        step();
+}
+
+void algorithm::Metropolis::sweep(int32_t step_count) {
     while (step_count-- > 0)
         step();
 }
