@@ -9,7 +9,8 @@ namespace algorithm {
 
 class Metropolis {
   public:
-    Metropolis(lattice::Atoms &atoms, const physics::Calculator &calculator);
+    explicit Metropolis(lattice::Atoms &atoms,
+                        const physics::Calculator &calculator);
 
     void step();
     void sweep();

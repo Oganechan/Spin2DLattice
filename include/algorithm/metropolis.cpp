@@ -3,9 +3,7 @@
 
 algorithm::Metropolis::Metropolis(lattice::Atoms &atoms,
                                   const physics::Calculator &calculator)
-    : atoms_(atoms), calculator_(calculator) {
-    Random::uniform_real<double>();
-}
+    : atoms_(atoms), calculator_(calculator) {}
 
 void algorithm::Metropolis::step() {
     const int32_t atom_id = atoms_.select_random_magnetic_atom();
