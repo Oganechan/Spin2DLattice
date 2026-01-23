@@ -8,7 +8,7 @@
 Simulation::Simulation(const Config &config,
                        const std::string &output_directory)
     : atoms_(config), calculator_(atoms_, config),
-      metropolis_(atoms_, calculator_),
+      swendsenwang_(atoms_, calculator_),
       output_directory_(
           output_directory + "/" + config.get<std::string>("material.name") +
           "/L" + std::to_string(config.get<int32_t>("lattice.system_size")) +
@@ -45,10 +45,10 @@ void Simulation::run() {
 void Simulation::run_single_simulation() {
     data_.reset();
 
-    metropolis_.sweep(10 * atoms_.get_magnetic_count());
+    swendsenwang_.sweep(100);
 
     for (int32_t measure = 0; measure < number_measures_; ++measure) {
-        metropolis_.sweep();
+        swendsenwang_.sweep(10);
         data_.measure();
     }
 

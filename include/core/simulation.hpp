@@ -1,7 +1,7 @@
 #ifndef SIMULATION_HPP
 #define SIMULATION_HPP
 
-#include "../algorithm/metropolis.hpp"
+#include "../algorithm/swendsenwang.hpp"
 #include "../lattice/atoms.hpp"
 #include "config.hpp"
 #include "data.hpp"
@@ -9,14 +9,15 @@
 
 class Simulation {
   public:
-    Simulation(const Config &config, const std::string &output_directory);
+    explicit Simulation(const Config &config,
+                        const std::string &output_directory);
 
     void run();
 
   private:
     lattice::Atoms atoms_;
     physics::Calculator calculator_;
-    algorithm::Metropolis metropolis_;
+    algorithm::Swendsenwang swendsenwang_;
     Data data_;
 
     const std::string output_directory_;
