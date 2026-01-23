@@ -62,13 +62,10 @@ class Atoms {
     // Sets the spin vector for the specified atom
     inline void set_spin(int32_t atom_id,
                          const std::array<double, 3> &spin_vector) {
-        double norm = std::sqrt(spin_vector[0] * spin_vector[0] +
-                                spin_vector[1] * spin_vector[1] +
-                                spin_vector[2] * spin_vector[2]);
 
-        spin_vectors_[atom_id][0] = spin_vector[0] / norm;
-        spin_vectors_[atom_id][1] = spin_vector[1] / norm;
-        spin_vectors_[atom_id][2] = spin_vector[2] / norm;
+        spin_vectors_[atom_id][0] = spin_vector[0];
+        spin_vectors_[atom_id][1] = spin_vector[1];
+        spin_vectors_[atom_id][2] = spin_vector[2];
     }
 
     // Returns normalized spin vector [x, y, z] with ||spin|| = 1.0

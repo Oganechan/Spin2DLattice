@@ -20,6 +20,7 @@ lattice::Geometry::Geometry(const Config &config)
     initialize_lattice();
     validate_parameters();
     compute_indices();
+    compute_sublattices();
     compute_positions();
     compute_neighbors();
 }
@@ -96,6 +97,7 @@ void lattice::Geometry::initialize_lattice() {
     switch (crystal_type_) {
     case CrystalType::RECTANGULAR:
         basis_count_ = 1;
+        sublattice_count_ = 2;
         basis_vectors_ = {{0.0, 0.0}};
         lattice_vectors_ = {{lattice_constant_a_, 0.0},
                             {0.0, lattice_constant_b_}};
@@ -103,6 +105,7 @@ void lattice::Geometry::initialize_lattice() {
 
     case CrystalType::C_RECTANGULAR:
         basis_count_ = 2;
+        sublattice_count_ = 2;
         basis_vectors_ = {
             {0.0, 0.0}, {0.5 * lattice_constant_a_, 0.5 * lattice_constant_b_}};
         lattice_vectors_ = {{lattice_constant_a_, 0.0},
@@ -111,6 +114,7 @@ void lattice::Geometry::initialize_lattice() {
 
     case CrystalType::TRIANGULAR:
         basis_count_ = 1;
+        sublattice_count_ = 3;
         basis_vectors_ = {{0.0, 0.0}};
         lattice_vectors_ = {
             {lattice_constant_a_, 0.0},
@@ -119,6 +123,7 @@ void lattice::Geometry::initialize_lattice() {
 
     case CrystalType::HONEYCOMB:
         basis_count_ = 2;
+        sublattice_count_ = 2;
         basis_vectors_ = {
             {0.0, 0.0},
             {0.5 * lattice_constant_a_, SQRT3_2 / 3.0 * lattice_constant_b_}};
@@ -129,6 +134,7 @@ void lattice::Geometry::initialize_lattice() {
 
     case CrystalType::KAGOME:
         basis_count_ = 3;
+        sublattice_count_ = 3;
         basis_vectors_ = {
             {0.0, 0.0},
             {0.5 * lattice_constant_a_, 0.0},
@@ -140,6 +146,7 @@ void lattice::Geometry::initialize_lattice() {
 
     case CrystalType::LIEB:
         basis_count_ = 3;
+        sublattice_count_ = 3;
         basis_vectors_ = {{0.0, 0.0},
                           {0.5 * lattice_constant_a_, 0.0},
                           {0.0, 0.5 * lattice_constant_b_}};
@@ -200,6 +207,52 @@ void lattice::Geometry::compute_indices() {
         atom_indices_[i] = get_cell_index(i);
 }
 
+void lattice::Geometry::compute_sublattices() {
+    switch (crystal_type_) {
+    case CrystalType::RECTANGULAR:
+        for (int32_t atom_id = 0; atom_id < atom_count_; ++atom_id) {
+            auto [cell_i, cell_j, basis_id] = get_cell_index(atom_id);
+            atom_sublattices_.push_back((cell_i + cell_j) % 2);
+        }
+        break;
+
+    case CrystalType::C_RECTANGULAR:
+        for (int32_t atom_id = 0; atom_id < atom_count_; ++atom_id) {
+            auto [cell_i, cell_j, basis_id] = get_cell_index(atom_id);
+            atom_sublattices_.push_back(basis_id);
+        }
+        break;
+
+    case CrystalType::TRIANGULAR:
+        for (int32_t atom_id = 0; atom_id < atom_count_; ++atom_id) {
+            auto [cell_i, cell_j, basis_id] = get_cell_index(atom_id);
+            atom_sublattices_.push_back((cell_i + 2 * cell_j) % 3);
+        }
+        break;
+
+    case CrystalType::HONEYCOMB:
+        for (int32_t atom_id = 0; atom_id < atom_count_; ++atom_id) {
+            auto [cell_i, cell_j, basis_id] = get_cell_index(atom_id);
+            atom_sublattices_.push_back(basis_id);
+        }
+        break;
+
+    case CrystalType::KAGOME:
+        for (int32_t atom_id = 0; atom_id < atom_count_; ++atom_id) {
+            auto [cell_i, cell_j, basis_id] = get_cell_index(atom_id);
+            atom_sublattices_.push_back(basis_id);
+        }
+        break;
+
+    case CrystalType::LIEB:
+        for (int32_t atom_id = 0; atom_id < atom_count_; ++atom_id) {
+            auto [cell_i, cell_j, basis_id] = get_cell_index(atom_id);
+            atom_sublattices_.push_back(basis_id);
+        }
+        break;
+    }
+}
+
 void lattice::Geometry::compute_positions() {
     atom_positions_.resize(atom_count_);
     for (int32_t i = 0; i < atom_count_; ++i)
@@ -246,30 +299,18 @@ void lattice::Geometry::compute_neighbors() {
             atom_neighbors.begin(), atom_neighbors.end(),
             [](const auto &a, const auto &b) { return a.second < b.second; });
 
-        for (int32_t shell = 0; shell < shell_count_; ++shell) {
-            double target_distance = double(shell + 1);
+        double current_distance = atom_neighbors[0].second;
+        int current_shell = 0;
 
-            for (const auto &[neighbor_id, distance] : atom_neighbors) {
-                if (target_distance - distance >= 0.0) {
-                    bool is_duplicate = false;
-
-                    for (int32_t smaller_shell = 0; smaller_shell < shell;
-                         ++smaller_shell) {
-                        for (const auto &existing_id :
-                             neighbor_table_[atom_id][smaller_shell])
-                            if (existing_id == neighbor_id) {
-                                is_duplicate = true;
-                                break;
-                            }
-                        if (is_duplicate)
-                            break;
-                    }
-
-                    if (!is_duplicate)
-                        neighbor_table_[atom_id][shell].emplace_back(
-                            neighbor_id);
-                }
+        for (const auto &[neighbor_id, distance] : atom_neighbors) {
+            if (std::abs(distance - current_distance) > 1.0e-5) {
+                current_distance = distance;
+                ++current_shell;
+                if (current_shell >= shell_count_)
+                    break;
             }
+            if (current_shell < shell_count_)
+                neighbor_table_[atom_id][current_shell].push_back(neighbor_id);
         }
 
         for (int32_t shell = 0; shell < shell_count_; ++shell)

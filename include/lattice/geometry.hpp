@@ -26,6 +26,9 @@ class Geometry {
     // Returns the total number of atoms in the system
     inline int32_t get_atom_count() const { return atom_count_; }
 
+    // Returns the number of sublattices for the current crystal structure.
+    inline int32_t get_sublattice_count() const { return sublattice_count_; }
+
     // Returns the lattice constant along the a-direction
     inline double get_lattice_constant_a() const { return lattice_constant_a_; }
 
@@ -47,6 +50,11 @@ class Geometry {
     inline const std::vector<std::array<double, 2>> &
     get_atom_positions() const {
         return atom_positions_;
+    }
+
+    // Returns the sublattice index for a particular atom
+    inline const std::vector<int32_t> &get_atom_sublattices() const {
+        return atom_sublattices_;
     }
 
     // Returns the neighbor table: [atom_id][shell][neighbor_index]
@@ -93,7 +101,7 @@ class Geometry {
 
   private:
     const int32_t system_size_, shell_count_;
-    int32_t basis_count_, atom_count_;
+    int32_t basis_count_, atom_count_, sublattice_count_;
     const double lattice_constant_a_, lattice_constant_b_;
 
     const CrystalType crystal_type_;
@@ -103,6 +111,7 @@ class Geometry {
     std::vector<std::array<double, 2>> lattice_vectors_;
     std::vector<std::array<int32_t, 3>> atom_indices_;
     std::vector<std::array<double, 2>> atom_positions_;
+    std::vector<int32_t> atom_sublattices_;
     std::vector<std::vector<std::vector<int32_t>>> neighbor_table_;
 
     static CrystalType parse_crystal_type(const std::string &crystal);
@@ -111,6 +120,7 @@ class Geometry {
     void initialize_lattice();
     void validate_parameters() const;
     void compute_indices();
+    void compute_sublattices();
     void compute_positions();
     void compute_neighbors();
 };
