@@ -4,16 +4,9 @@ A high-performance C++ implementation of Monte Carlo simulation for magnetic spi
 
 ## Authors
 
-- **Leonid Brykin** ([@d3adand3nd](https://github.com/d3adand3nd)) - Project inspiration and scientific guidance
+- **Leonid Afremov** (afremov.ll@dvfu.ru) - Scientific supervisor
 - **Nikita Legkikh** ([@oganechan](https://github.com/Oganechan)) - Implementation and development
-- **Murlyka** ([@murlyka-coder](https://github.com/murlyka-coder)) - Implementation and development
-
-## Features
-
-- **Heisenberg spin model** with 3D vector spins
-- **Multiple crystal lattices**: rectangular, c_rectangular, triangular, honeycomb, kagome, lieb
-- **Metropolis algorithm** for thermal equilibrium
-- **Configurable parameters** via JSON
+- **Leonid Brykin** ([@d3adand3nd](https://github.com/d3adand3nd)) - Developed the implementation of geometry
 
 ## Quick Start
 
@@ -21,7 +14,7 @@ A high-performance C++ implementation of Monte Carlo simulation for magnetic spi
 ```bash
 git clone https://github.com/Oganechan/Spin2DLattice
 mkdir ./Spin2DLattice/build && cd ./Spin2DLattice/build
-g++ ../include/core/data.cpp ../include/core/simulation.cpp ../include/lattice/atoms.cpp ../include/lattice/geometry.cpp ../include/physics/calculator.cpp ../include/algorithm/metropolis.cpp ../include/main.cpp -o Spin2DLattice
+g++ ../include/core/data.cpp ../include/core/simulation.cpp ../include/lattice/atoms.cpp ../include/lattice/geometry.cpp ../include/physics/calculator.cpp ../include/algorithm/swendsenwang.cpp ../include/main.cpp -o Spin2DLattice
 ```
 
 ### Run simulation
@@ -36,8 +29,8 @@ g++ ../include/core/data.cpp ../include/core/simulation.cpp ../include/lattice/a
 ```json
 {
     "lattice": {
-        "crystal_type": "rectangular",
-        "system_size": 20,
+        "crystal_type": "triangular",
+        "system_size": 32,
         "lattice_constant_a": 1.0,
         "lattice_constant_b": 1.0,
         "boundary_type": "periodic"
@@ -49,20 +42,18 @@ g++ ../include/core/data.cpp ../include/core/simulation.cpp ../include/lattice/a
             0.0
         ],
         "exchange_constants": [
-            1.0
+            -1.0
         ],
-        "temperature": 100.0,
+        "anisotropy_constant": -1.0,
+        "temperature": 1.0,
         "concentration": 1.0
     },
     "simulation": {
         "number_measures": 1000,
         "scan_type": "temperature",
-        "scan_start": 0.0,
-        "scan_step": 0.1,
-        "scan_end": 3.0
-    },
-    "material": {
-        "name": "test"
+        "scan_start": 0.01,
+        "scan_step": 0.05,
+        "scan_end": 1.0
     }
 }
 ```
