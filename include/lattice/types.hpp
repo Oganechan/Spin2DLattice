@@ -15,6 +15,8 @@ enum class CrystalType {
 
 enum class BoundaryType { PERIODIC, HARD };
 
+enum class SpinModel { ISING, XY, HEISENBERG };
+
 } // namespace lattice
 
 #endif // TYPES_HPP
