@@ -22,7 +22,7 @@ double physics::Calculator::calculate_total_energy() const {
     for (int32_t atom_id : atoms_.get_magnetic_atoms()) {
         const auto &spin = atoms_.get_spin(atom_id);
         total_energy +=
-            -calculate_spin_dot_product(spin, external_magnetic_field_) +
+            -calculate_spin_dot_product(spin, external_magnetic_field_) -
             anisotropy_constant_ * spin[2] * spin[2];
     }
 
@@ -45,7 +45,7 @@ double physics::Calculator::calculate_total_energy() const {
         }
     }
 
-    return total_energy;
+    return total_energy / atoms_.get_geometry().get_atom_count();
 }
 
 // Calculates the local energy contribution for a specific atom
@@ -55,7 +55,7 @@ double physics::Calculator::calculate_atom_energy(int32_t atom_id) const {
 
     const auto &atom_spin = atoms_.get_spin(atom_id);
     double energy =
-        -calculate_spin_dot_product(atom_spin, external_magnetic_field_) +
+        -calculate_spin_dot_product(atom_spin, external_magnetic_field_) -
         anisotropy_constant_ * atom_spin[2] * atom_spin[2];
 
     for (int32_t shell_index = 0; shell_index < geometry_.get_shell_count();
@@ -86,11 +86,11 @@ double physics::Calculator::calculate_flip_energy_difference(
     const double spin_diff_y = new_spin[1] - old_spin[1];
     const double spin_diff_z = new_spin[2] - old_spin[2];
 
-    double energy_diff = -(spin_diff_x * external_magnetic_field_[0] +
-                           spin_diff_y * external_magnetic_field_[1] +
-                           spin_diff_z * external_magnetic_field_[2]) +
-                         anisotropy_constant_ * (new_spin[2] * new_spin[2] -
-                                                 old_spin[2] * old_spin[2]);
+    double energy_diff = -calculate_spin_dot_product(
+        {spin_diff_x, spin_diff_y, spin_diff_z}, external_magnetic_field_);
+
+    energy_diff -= anisotropy_constant_ *
+                   (new_spin[2] * new_spin[2] - old_spin[2] * old_spin[2]);
 
     for (int32_t shell_index = 0; shell_index < geometry_.get_shell_count();
          ++shell_index) {
@@ -137,6 +137,7 @@ double physics::Calculator::calculate_total_order() const {
     int32_t N_total = geometry_.get_atom_count();
 
     std::vector<std::array<double, 3>> sublattice_sum(K, {0.0, 0.0, 0.0});
+    std::vector<int32_t> sublattice_count(K, 0);
 
     for (int32_t atom_id : atoms_.get_magnetic_atoms()) {
         const auto &spin = atoms_.get_spin(atom_id);
@@ -145,16 +146,28 @@ double physics::Calculator::calculate_total_order() const {
         sublattice_sum[sublattice][0] += spin[0];
         sublattice_sum[sublattice][1] += spin[1];
         sublattice_sum[sublattice][2] += spin[2];
+        sublattice_count[sublattice]++;
+    }
+
+    std::vector<std::array<double, 3>> sublattice_magnetization(K);
+    for (int r = 0; r < K; ++r) {
+        if (sublattice_count[r] > 0) {
+            sublattice_magnetization[r][0] =
+                sublattice_sum[r][0] / sublattice_count[r];
+            sublattice_magnetization[r][1] =
+                sublattice_sum[r][1] / sublattice_count[r];
+            sublattice_magnetization[r][2] =
+                sublattice_sum[r][2] / sublattice_count[r];
+        }
     }
 
     double sum_sq = 0.0;
-    for (int32_t r = 0; r < K; r++) {
-        double mx = sublattice_sum[r][0];
-        double my = sublattice_sum[r][1];
-        double mz = sublattice_sum[r][2];
-
+    for (int r = 0; r < K; ++r) {
+        double mx = sublattice_magnetization[r][0];
+        double my = sublattice_magnetization[r][1];
+        double mz = sublattice_magnetization[r][2];
         sum_sq += mx * mx + my * my + mz * mz;
     }
 
-    return (K / (double)N_total) * std::sqrt(sum_sq / K);
+    return std::sqrt(sum_sq / K);
 }

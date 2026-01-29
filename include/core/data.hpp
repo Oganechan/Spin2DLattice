@@ -2,60 +2,45 @@
 #define DATA_HPP
 
 #include "../physics/calculator.hpp"
+#include "config.hpp"
+#include "measurements.hpp"
+#include <cstdint>
+#include <filesystem>
 #include <string>
-#include <vector>
+
+namespace fs = std::filesystem;
 
 class Data {
   public:
-    explicit Data(const physics::Calculator &calculator,
-                  const std::string &output_path);
+    explicit Data(const physics::Calculator &calculator, const Config &config,
+                  const std::string &base_output_dir);
 
     void measure();
-    void save();
-    void reset();
-
-    inline double get_mean_energy() const { return mean_energy_; }
-    inline double get_mean_energy_sq() const { return mean_energy_sq; }
-
-    inline double get_mean_order_parameter() const {
-        return mean_order_parameter_;
-    }
-    inline double get_mean_order_parameter_sq() const {
-        return mean_order_parameter_sq_;
-    }
-    inline double get_mean_order_parameter_4th() const {
-        return mean_order_parameter_4th_;
-    }
-
-    inline double get_specific_heat() const { return specific_heat_; }
-
-    inline double get_order_susceptibility() const {
-        return order_susceptibility_;
-    }
-
-    inline double get_order_binder() const { return order_binder_; }
+    void save_statistics();
+    void save_finale();
 
   private:
     const physics::Calculator &calculator_;
-    const std::string &output_path_;
+    const Config &config_;
 
-    std::vector<double> energies_;
-    std::vector<double> magnetizations_;
-    std::vector<double> order_parameters_;
+    fs::path output_dir_;
+    std::string simulation_name_;
 
-    double mean_energy_ = 0.0;
-    double mean_energy_sq = 0.0;
+    Measurements measurements_;
 
-    double mean_order_parameter_ = 0.0;     // ⟨φ⟩
-    double mean_order_parameter_abs_ = 0.0; // ⟨|φ|⟩
-    double mean_order_parameter_sq_ = 0.0;  // ⟨φ²⟩
-    double mean_order_parameter_4th_ = 0.0; // ⟨φ⁴⟩
+    std::string generate_simulation_name() const;
 
-    double specific_heat_ = 0.0;
-    double order_susceptibility_ = 0.0;
-    double order_binder_ = 0.0;
+    void initialize();
 
+    void create_directory_structure();
+    void save_config() const;
+    void save_geometry() const;
+    void save_neighbor_table() const;
+
+    void reset();
     void compute_statistics();
+
+    std::string format_double(double value, int32_t precision = 8) const;
 };
 
 #endif // DATA_HPP

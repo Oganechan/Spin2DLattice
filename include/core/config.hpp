@@ -49,6 +49,8 @@ class Config {
         return current.value(k, default_value);
     }
 
+    json get() const { return config_; }
+
     template <typename T> void set(const std::string &key, const T &value) {
         std::unique_lock lock(mutex_);
 

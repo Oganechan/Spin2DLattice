@@ -5,36 +5,25 @@
 #include <iostream>
 #include <string>
 
-Simulation::Simulation(const Config &config,
-                       const std::string &output_directory)
+Simulation::Simulation(const Config &config, const std::string &base_output_dir)
     : atoms_(config), calculator_(atoms_, config),
-      swendsenwang_(atoms_, calculator_),
-      output_directory_(
-          output_directory + "/" + config.get<std::string>("material.name") +
-          "/L" + std::to_string(config.get<int32_t>("lattice.system_size")) +
-          "_N" +
-          std::to_string(config.get<int32_t>("simulation.number_measures")) +
-          ".dat"),
-      data_(calculator_, output_directory_),
+      swendsenwang_(atoms_, calculator_), base_output_dir_(base_output_dir),
+      data_(calculator_, config, base_output_dir),
       number_measures_(config.get<int32_t>("simulation.number_measures")),
       scan_type_(config.get<std::string>("simulation.scan_type")),
       scan_start_(config.get<double>("simulation.scan_start")),
       scan_step_(config.get<double>("simulation.scan_step")),
-      scan_end_(config.get<double>("simulation.scan_end")) {
-    std::filesystem::create_directories(
-        output_directory + "/" + config.get<std::string>("material.name"));
-}
+      scan_end_(config.get<double>("simulation.scan_end")) {}
 
 void Simulation::run() {
     auto start_time = std::chrono::steady_clock::now();
-
-    std::ofstream file(output_directory_, std::ios::trunc);
 
     if (scan_type_ == "temperature")
         run_temperature_scan();
     else
         run_concentration_scan();
 
+    data_.save_finale();
     auto end_time = std::chrono::steady_clock::now();
 
     std::cout << "Execution time: "
@@ -43,7 +32,6 @@ void Simulation::run() {
 }
 
 void Simulation::run_single_simulation() {
-    data_.reset();
 
     swendsenwang_.sweep(100);
 
@@ -52,7 +40,7 @@ void Simulation::run_single_simulation() {
         data_.measure();
     }
 
-    data_.save();
+    data_.save_statistics();
 }
 
 void Simulation::run_temperature_scan() {

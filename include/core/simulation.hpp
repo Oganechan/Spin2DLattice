@@ -10,7 +10,7 @@
 class Simulation {
   public:
     explicit Simulation(const Config &config,
-                        const std::string &output_directory);
+                        const std::string &base_output_dir);
 
     void run();
 
@@ -20,7 +20,7 @@ class Simulation {
     algorithm::Swendsenwang swendsenwang_;
     Data data_;
 
-    const std::string output_directory_;
+    const std::string base_output_dir_;
 
     const int32_t number_measures_;
     const std::string scan_type_;
