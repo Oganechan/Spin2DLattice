@@ -1,14 +1,31 @@
 #include "atoms.hpp"
+#include "spin.hpp"
+#include "types.hpp"
 #include <algorithm>
-#include <array>
-#include <cmath>
 #include <cstdint>
+#include <memory>
 #include <numeric>
+#include <stdexcept>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
-lattice::Atoms::Atoms(const Config &config) : geometry_(config) {
+lattice::Atoms::Atoms(const Config &config)
+    : geometry_(config), spin_model_(parse_spin_model(
+                             config.get<std::string>("physics.model_type"))) {
     initialize_spins();
+}
+
+lattice::SpinModel lattice::Atoms::parse_spin_model(const std::string &model) {
+    static const std::unordered_map<std::string, SpinModel> mapping = {
+        {"Ising", SpinModel::ISING},
+        {"XY", SpinModel::XY},
+        {"Heisenberg", SpinModel::HEISENBERG}};
+
+    if (auto it = mapping.find(model); it != mapping.end())
+        return it->second;
+
+    throw std::invalid_argument("Unknowing spin model:" + model);
 }
 
 // Randomly sets atoms as non-magnetic atoms with given concentration
@@ -36,53 +53,30 @@ void lattice::Atoms::set_random_defects(double defect_concentration) {
     update_cache_data();
 }
 
-std::array<double, 3> lattice::Atoms::small_rotate_spin(int32_t atom_id) {
-    const auto &spin = get_spin(atom_id);
-
-    static double max_angel = 30.0 * (M_PI / 180.0);
-    double phi = std::atan2(spin[1], spin[0]) +
-                 Random::uniform_real<double>(-max_angel, max_angel);
-    double theta = std::acos(spin[2]) +
-                   Random::uniform_real<double>(-max_angel, max_angel);
-
-    double x = std::sin(theta) * std::cos(phi);
-    double y = std::sin(theta) * std::sin(phi);
-    double z = std::cos(theta);
-
-    return {x, y, z};
+std::unique_ptr<lattice::BaseSpin>
+lattice::Atoms::generate_random_spin() const {
+    auto spin = spin_factory_.create(spin_model_);
+    spin->randomize();
+    return spin;
 }
 
 // Initializes all magnetic spins with random orientations
 void lattice::Atoms::initialize_random() {
     for (int32_t i = 0; i < geometry_.get_atom_count(); ++i) {
-        spin_vectors_[i] = generate_random_spin();
-    }
-}
-
-// Initializes all magnetic spins in ferromagnetic alignment (+z direction)
-void lattice::Atoms::initialize_ferromagnetic() {
-    const std::array<double, 3> spin = {0.0, 0.0, 1.0};
-    for (int32_t i = 0; i < geometry_.get_atom_count(); ++i)
-        spin_vectors_[i] = spin;
-}
-
-// Initializes magnetic spins in antiferromagnetic pattern (+-z alternating
-// direction)
-void lattice::Atoms::initialize_antiferromagnetic() {
-    for (int32_t i = 0; i < geometry_.get_atom_count(); ++i) {
-        auto [cell_i, cell_j, atom_in_cell_id] = geometry_.get_cell_index(i);
-        bool spin_up = (cell_i + cell_j + atom_in_cell_id) % 2 == 0;
-        spin_vectors_[i] = {0.0, 0.0, spin_up ? 1.0 : -1.0};
+        spins_[i]->randomize();
     }
 }
 
 void lattice::Atoms::initialize_spins() {
     int32_t atom_count = geometry_.get_atom_count();
 
-    spin_vectors_.resize(atom_count);
+    spins_.resize(atom_count);
     magnetic_mask_.resize(atom_count, true);
     magnetic_atoms_.reserve(atom_count);
     defect_atoms_.reserve(atom_count);
+
+    for (int32_t i = 0; i < atom_count; ++i)
+        spins_[i] = spin_factory_.create(spin_model_);
 
     update_cache_data();
 }

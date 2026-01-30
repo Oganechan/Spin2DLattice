@@ -3,9 +3,11 @@
 
 #include "../utils/random.hpp"
 #include "geometry.hpp"
+#include "spin.hpp"
+#include "types.hpp"
 #include <array>
-#include <cmath>
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 namespace lattice {
@@ -15,15 +17,14 @@ class Atoms {
     explicit Atoms(const Config &config);
 
     void set_random_defects(double defect_concentration);
-    std::array<double, 3> small_rotate_spin(int32_t atom_id);
+    std::unique_ptr<BaseSpin> generate_random_spin() const;
     void initialize_random();
-    void initialize_ferromagnetic();
-    void initialize_antiferromagnetic();
 
     // Sets the magnetic state of an atom (true = magnetic, false =
     // non-magnetic)
     inline void set_magnetic_state(int32_t atom_id, bool is_magnetic) {
         magnetic_mask_[atom_id] = is_magnetic;
+        update_cache_data();
     }
 
     // Returns the magnetic state of the specified atom
@@ -55,29 +56,19 @@ class Atoms {
     }
 
     // Returns the spin vector of the specified atom
-    inline std::array<double, 3> get_spin(int32_t atom_id) const {
-        return spin_vectors_[atom_id];
+    inline std::array<double, 3> get_spin_components(int32_t atom_id) const {
+        return spins_[atom_id]->get_components();
+    }
+
+    // Returns the spin object of the specified atom
+    inline const BaseSpin &get_spin(int32_t atom_id) const {
+        return *spins_[atom_id];
     }
 
     // Sets the spin vector for the specified atom
-    inline void set_spin(int32_t atom_id,
-                         const std::array<double, 3> &spin_vector) {
+    inline void set_spin(int32_t atom_id, const BaseSpin &new_spin) {
 
-        spin_vectors_[atom_id][0] = spin_vector[0];
-        spin_vectors_[atom_id][1] = spin_vector[1];
-        spin_vectors_[atom_id][2] = spin_vector[2];
-    }
-
-    // Returns normalized spin vector [x, y, z] with ||spin|| = 1.0
-    inline std::array<double, 3> generate_random_spin() const {
-        double phi = Random::uniform_real<double>(0, 2 * M_PI);
-        double theta = Random::uniform_real<double>(0, M_PI);
-
-        double x = std::sin(theta) * std::cos(phi);
-        double y = std::sin(theta) * std::sin(phi);
-        double z = std::cos(theta);
-
-        return {x, y, z};
+        spins_[atom_id]->replace(new_spin);
     }
 
     // Returns random magnetic atom
@@ -89,15 +80,22 @@ class Atoms {
     // Returns the geometry object
     inline const Geometry &get_geometry() const { return geometry_; }
 
+    // Returns spin type
+    inline const SpinModel get_spin_model() const { return spin_model_; }
+
   private:
     const Geometry geometry_;
+    const SpinModel spin_model_;
+    SpinFactory spin_factory_;
 
-    std::vector<std::array<double, 3>> spin_vectors_;
+    std::vector<std::unique_ptr<BaseSpin>> spins_;
     std::vector<bool> magnetic_mask_;
 
     mutable int32_t magnetic_count_;
     mutable std::vector<int32_t> magnetic_atoms_;
     mutable std::vector<int32_t> defect_atoms_;
+
+    static SpinModel parse_spin_model(const std::string &model);
 
     void initialize_spins();
     void update_cache_data() const;

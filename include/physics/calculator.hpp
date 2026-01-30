@@ -2,7 +2,9 @@
 #define CALCULATOR_HPP
 
 #include "../lattice/atoms.hpp"
+#include <array>
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 namespace physics {
@@ -15,6 +17,9 @@ class Calculator {
     double calculate_atom_energy(int32_t atom_id) const;
     double calculate_flip_energy_difference(
         int32_t atom_id, const std::array<double, 3> &new_spin) const;
+    double calculate_flip_energy_difference(
+        int32_t atom_id,
+        const std::unique_ptr<lattice::BaseSpin> &new_spin) const;
     double calculate_total_magnetization() const;
     double calculate_total_order() const;
 
@@ -44,11 +49,11 @@ class Calculator {
     double temperature_;
     double concentration_;
 
-    inline double
-    calculate_spin_dot_product(const std::array<double, 3> &spin1,
-                               const std::array<double, 3> &spin2) const {
-        return spin1[0] * spin2[0] + spin1[1] * spin2[1] + spin1[2] * spin2[2];
-    }
+    double dot_product(const lattice::BaseSpin &spin1,
+                       const lattice::BaseSpin &spin2) const;
+    double dot_product(const lattice::BaseSpin &spin1,
+                       const std::array<double, 3> &spin2) const;
+    double calculate_anisotropy_energy(const lattice::BaseSpin &spin) const;
 };
 
 } // namespace physics

@@ -85,7 +85,7 @@ class HeisenbergSpin : public BaseSpin {
 
 class SpinFactory {
   public:
-    std::unique_ptr<BaseSpin> create(SpinModel model) {
+    std::unique_ptr<BaseSpin> create(SpinModel model) const {
         switch (model) {
         case SpinModel::ISING:
             return std::make_unique<IsingSpin>();
