@@ -43,7 +43,7 @@ double physics::Calculator::calculate_total_energy() const {
         }
     }
 
-    return total_energy / geometry_.get_atom_count();
+    return total_energy / atoms_.get_magnetic_count();
 }
 
 // Calculates the local energy contribution for a specific atom
@@ -106,7 +106,7 @@ double physics::Calculator::calculate_total_magnetization() const {
     if (atoms_.get_magnetic_count() == 0)
         return 0.0;
 
-    double total_x, total_y, total_z;
+    double total_x = 0.0, total_y = 0.0, total_z = 0.0;
     for (int32_t atom_id : atoms_.get_magnetic_atoms()) {
         const auto components = atoms_.get_spin_components(atom_id);
         total_x += components[0];
@@ -116,7 +116,7 @@ double physics::Calculator::calculate_total_magnetization() const {
 
     return std::sqrt(total_x * total_x + total_y * total_y +
                      total_z * total_z) /
-           geometry_.get_atom_count();
+           atoms_.get_magnetic_count();
 }
 
 double physics::Calculator::calculate_total_order() const {
