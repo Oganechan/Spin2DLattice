@@ -28,30 +28,31 @@ g++ ../include/core/data.cpp ../include/core/simulation.cpp ../include/lattice/a
 ```json
 {
     "lattice": {
-        "crystal_type": "triangular",
-        "system_size": 32,
+        "system_size": 12,
         "lattice_constant_a": 1.0,
         "lattice_constant_b": 1.0,
+        "crystal_type": "triangular",
         "boundary_type": "periodic"
     },
     "physical": {
+        "model_type": "Ising",
         "external_magnetic_field": [
             0.0,
             0.0,
             0.0
         ],
         "exchange_constants": [
-            -1.0
+            1.0
         ],
-        "anisotropy_constant": -1.0,
+        "anisotropy_constant": 0.0,
         "temperature": 1.0,
         "concentration": 1.0
     },
     "simulation": {
-        "number_measures": 1000,
+        "number_measures": 100,
         "scan_type": "temperature",
         "scan_start": 0.01,
-        "scan_step": 0.05,
+        "scan_step": 0.02,
         "scan_end": 1.0
     }
 }
