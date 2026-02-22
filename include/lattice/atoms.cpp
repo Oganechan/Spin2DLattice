@@ -12,7 +12,7 @@
 
 lattice::Atoms::Atoms(const Config &config)
     : geometry_(config), spin_model_(parse_spin_model(
-                             config.get<std::string>("physics.model_type"))) {
+                             config.get<std::string>("physical.model_type"))) {
     initialize_spins();
 }
 
@@ -55,7 +55,7 @@ void lattice::Atoms::set_random_defects(double defect_concentration) {
 
 std::unique_ptr<lattice::BaseSpin>
 lattice::Atoms::generate_random_spin() const {
-    auto spin = spin_factory_.create(spin_model_);
+    auto spin = lattice::SpinFactory::create(spin_model_);
     spin->randomize();
     return spin;
 }
@@ -76,7 +76,7 @@ void lattice::Atoms::initialize_spins() {
     defect_atoms_.reserve(atom_count);
 
     for (int32_t i = 0; i < atom_count; ++i)
-        spins_[i] = spin_factory_.create(spin_model_);
+        spins_[i] = lattice::SpinFactory::create(spin_model_);
 
     update_cache_data();
 }

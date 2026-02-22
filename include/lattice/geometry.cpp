@@ -33,7 +33,8 @@ lattice::Geometry::parse_crystal_type(const std::string &crystal) {
         {"triangular", CrystalType::TRIANGULAR},
         {"honeycomb", CrystalType::HONEYCOMB},
         {"kagome", CrystalType::KAGOME},
-        {"lieb", CrystalType::LIEB}};
+        {"lieb", CrystalType::LIEB},
+        {"special", CrystalType::SPECIAL}};
 
     if (auto it = mapping.find(crystal); it != mapping.end())
         return it->second;
@@ -96,16 +97,12 @@ void lattice::Geometry::initialize_lattice() {
 
     switch (crystal_type_) {
     case CrystalType::RECTANGULAR:
-        basis_count_ = 1;
-        sublattice_count_ = 2;
-        basis_vectors_ = {{0.0, 0.0}};
-        lattice_vectors_ = {{lattice_constant_a_, 0.0},
-                            {0.0, lattice_constant_b_}};
+        basis_vectors_ = {{0.0, 0.0}, {lattice_constant_a_, 0.0}};
+        lattice_vectors_ = {{2.0 * lattice_constant_a_, 0.0},
+                            {lattice_constant_a_, lattice_constant_b_}};
         break;
 
     case CrystalType::C_RECTANGULAR:
-        basis_count_ = 2;
-        sublattice_count_ = 2;
         basis_vectors_ = {
             {0.0, 0.0}, {0.5 * lattice_constant_a_, 0.5 * lattice_constant_b_}};
         lattice_vectors_ = {{lattice_constant_a_, 0.0},
@@ -113,17 +110,16 @@ void lattice::Geometry::initialize_lattice() {
         break;
 
     case CrystalType::TRIANGULAR:
-        basis_count_ = 1;
-        sublattice_count_ = 3;
-        basis_vectors_ = {{0.0, 0.0}};
-        lattice_vectors_ = {
+        basis_vectors_ = {
+            {0.0, 0.0},
             {lattice_constant_a_, 0.0},
             {0.5 * lattice_constant_a_, SQRT3_2 * lattice_constant_b_}};
+        lattice_vectors_ = {
+            {1.5 * lattice_constant_a_, SQRT3_2 * lattice_constant_b_},
+            {0.0, 2.0 * SQRT3_2 * lattice_constant_b_}};
         break;
 
     case CrystalType::HONEYCOMB:
-        basis_count_ = 2;
-        sublattice_count_ = 2;
         basis_vectors_ = {
             {0.0, 0.0},
             {0.5 * lattice_constant_a_, SQRT3_2 / 3.0 * lattice_constant_b_}};
@@ -133,8 +129,6 @@ void lattice::Geometry::initialize_lattice() {
         break;
 
     case CrystalType::KAGOME:
-        basis_count_ = 3;
-        sublattice_count_ = 3;
         basis_vectors_ = {
             {0.0, 0.0},
             {0.5 * lattice_constant_a_, 0.0},
@@ -145,16 +139,22 @@ void lattice::Geometry::initialize_lattice() {
         break;
 
     case CrystalType::LIEB:
-        basis_count_ = 3;
-        sublattice_count_ = 3;
         basis_vectors_ = {{0.0, 0.0},
                           {0.5 * lattice_constant_a_, 0.0},
                           {0.0, 0.5 * lattice_constant_b_}};
         lattice_vectors_ = {{lattice_constant_a_, 0.0},
                             {0.0, lattice_constant_b_}};
         break;
+
+    case CrystalType::SPECIAL:
+        basis_vectors_ = {{0.0, 0.0},
+                          {0.5 * lattice_constant_a_, 0.0},
+                          {0.0, 0.5 * lattice_constant_b_}};
+        lattice_vectors_ = {{lattice_constant_a_, 0.0},
+                            {0.5 * lattice_constant_a_, lattice_constant_b_}};
     }
 
+    basis_count_ = basis_vectors_.size();
     atom_count_ = system_size_ * system_size_ * basis_count_;
 }
 
@@ -208,48 +208,10 @@ void lattice::Geometry::compute_indices() {
 }
 
 void lattice::Geometry::compute_sublattices() {
-    switch (crystal_type_) {
-    case CrystalType::RECTANGULAR:
-        for (int32_t atom_id = 0; atom_id < atom_count_; ++atom_id) {
-            auto [cell_i, cell_j, basis_id] = get_cell_index(atom_id);
-            atom_sublattices_.push_back((cell_i + cell_j) % 2);
-        }
-        break;
-
-    case CrystalType::C_RECTANGULAR:
-        for (int32_t atom_id = 0; atom_id < atom_count_; ++atom_id) {
-            auto [cell_i, cell_j, basis_id] = get_cell_index(atom_id);
-            atom_sublattices_.push_back(basis_id);
-        }
-        break;
-
-    case CrystalType::TRIANGULAR:
-        for (int32_t atom_id = 0; atom_id < atom_count_; ++atom_id) {
-            auto [cell_i, cell_j, basis_id] = get_cell_index(atom_id);
-            atom_sublattices_.push_back((cell_i + 2 * cell_j) % 3);
-        }
-        break;
-
-    case CrystalType::HONEYCOMB:
-        for (int32_t atom_id = 0; atom_id < atom_count_; ++atom_id) {
-            auto [cell_i, cell_j, basis_id] = get_cell_index(atom_id);
-            atom_sublattices_.push_back(basis_id);
-        }
-        break;
-
-    case CrystalType::KAGOME:
-        for (int32_t atom_id = 0; atom_id < atom_count_; ++atom_id) {
-            auto [cell_i, cell_j, basis_id] = get_cell_index(atom_id);
-            atom_sublattices_.push_back(basis_id);
-        }
-        break;
-
-    case CrystalType::LIEB:
-        for (int32_t atom_id = 0; atom_id < atom_count_; ++atom_id) {
-            auto [cell_i, cell_j, basis_id] = get_cell_index(atom_id);
-            atom_sublattices_.push_back(basis_id);
-        }
-        break;
+    sublattice_count_ = basis_vectors_.size();
+    for (int32_t atom_id = 0; atom_id < atom_count_; ++atom_id) {
+        auto [cell_i, cell_j, basis_id] = get_cell_index(atom_id);
+        atom_sublattices_.push_back(basis_id);
     }
 }
 

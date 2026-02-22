@@ -9,7 +9,8 @@ enum class CrystalType {
     TRIANGULAR,
     HONEYCOMB,
     KAGOME,
-    LIEB
+    LIEB,
+    SPECIAL
 
 };
 

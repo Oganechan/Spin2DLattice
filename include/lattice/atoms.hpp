@@ -86,7 +86,6 @@ class Atoms {
   private:
     const Geometry geometry_;
     const SpinModel spin_model_;
-    SpinFactory spin_factory_;
 
     std::vector<std::unique_ptr<BaseSpin>> spins_;
     std::vector<bool> magnetic_mask_;

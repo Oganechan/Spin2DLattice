@@ -4,6 +4,7 @@
 #include "../core/config.hpp"
 #include "types.hpp"
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <vector>
 
@@ -92,6 +93,9 @@ class Geometry {
         double y = cell_i * lattice_vectors_[0][1] +
                    cell_j * lattice_vectors_[1][1] +
                    basis_vectors_[atom_in_cell_id][1];
+
+        x = std::fmod(x, system_size_ * lattice_vectors_[0][0]);
+        y = std::fmod(y, system_size_ * lattice_vectors_[1][1]);
 
         return {x, y};
     }
