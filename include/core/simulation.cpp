@@ -7,13 +7,20 @@
 
 Simulation::Simulation(const Config &config, const std::string &base_output_dir)
     : atoms_(config), calculator_(atoms_, config),
-      swendsenwang_(atoms_, calculator_), base_output_dir_(base_output_dir),
+      base_output_dir_(base_output_dir),
       data_(calculator_, config, base_output_dir),
       number_measures_(config.get<int32_t>("simulation.number_measures")),
       scan_type_(config.get<std::string>("simulation.scan_type")),
       scan_start_(config.get<double>("simulation.scan_start")),
       scan_step_(config.get<double>("simulation.scan_step")),
-      scan_end_(config.get<double>("simulation.scan_end")) {}
+      scan_end_(config.get<double>("simulation.scan_end")) {
+    uint32_t dir_count =
+        (atoms_.get_spin_model() == lattice::SpinModel::ISING
+             ? 1
+             : (atoms_.get_spin_model() == lattice::SpinModel::XY ? 2 : 3));
+    swendsenwang_ =
+        algorithm::SwendsenWangFactory::create(dir_count, atoms_, calculator_);
+}
 
 void Simulation::run() {
     auto start_time = std::chrono::steady_clock::now();
@@ -33,10 +40,10 @@ void Simulation::run() {
 
 void Simulation::run_single_simulation() {
 
-    swendsenwang_.sweep(100);
+    swendsenwang_->sweep(10);
 
     for (int32_t measure = 0; measure < number_measures_; ++measure) {
-        swendsenwang_.sweep(10);
+        swendsenwang_->sweep(10);
         data_.measure();
     }
 

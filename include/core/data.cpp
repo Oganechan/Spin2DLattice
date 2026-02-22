@@ -42,7 +42,7 @@ void Data::compute_statistics() {
     int32_t magnetic_count = calculator_.get_atoms().get_magnetic_count();
 
     double T = calculator_.get_temperature();
-    int32_t N = calculator_.get_atoms().get_geometry().get_atom_count();
+    int32_t N = calculator_.get_atoms().get_magnetic_count();
 
     if (T == 0.0)
         return;
@@ -90,17 +90,19 @@ void Data::compute_statistics() {
     mean_order_parameter_4th /= measurement_count;
 
     double specific_heat =
-        (mean_energy_sq - mean_energy * mean_energy) / (T * T);
+        N * (mean_energy_sq - mean_energy * mean_energy) / (T * T);
     double energy_binder =
         1.0 - mean_energy_4th / (3.0 * mean_energy_sq * mean_energy_sq);
 
     double magnetic_susceptibility =
-        (mean_magnetization_sq - mean_magnetization * mean_magnetization) / T;
+        N * (mean_magnetization_sq - mean_magnetization * mean_magnetization) /
+        T;
     double magnetic_binder =
         1.0 - mean_magnetization_4th /
                   (3.0 * mean_magnetization_sq * mean_magnetization_sq);
 
     double order_susceptibility =
+        N *
         (mean_order_parameter_sq -
          mean_order_parameter * mean_order_parameter) /
         T;
