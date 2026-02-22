@@ -6,7 +6,6 @@ A high-performance C++ implementation of Monte Carlo simulation for magnetic spi
 
 - **Leonid Afremov** (afremov.ll@dvfu.ru) - Scientific supervisor
 - **Nikita Legkikh** ([@oganechan](https://github.com/Oganechan)) - Implementation and development
-- **Leonid Brykin** ([@d3adand3nd](https://github.com/d3adand3nd)) - Developed the implementation of geometry
 
 ## Quick Start
 
