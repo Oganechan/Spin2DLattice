@@ -21,6 +21,11 @@ g++ ../include/core/data.cpp ../include/core/simulation.cpp ../include/lattice/a
 ./Spin2DLattice
 ```
 
+### Plots builing
+```bash
+bash ./script/build_plots.sh ./data
+```
+
 ## Configuration example
 
 ### JSON Format
