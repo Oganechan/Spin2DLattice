@@ -40,7 +40,7 @@ void Simulation::run() {
 
 void Simulation::run_single_simulation() {
 
-    swendsenwang_->sweep(10);
+    swendsenwang_->sweep(15000);
 
     for (int32_t measure = 0; measure < number_measures_; ++measure) {
         swendsenwang_->sweep(10);
