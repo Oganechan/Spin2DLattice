@@ -31,8 +31,6 @@ class Simulation {
     void run_single_simulation();
     void run_temperature_scan();
     void run_concentration_scan();
-
-    void dynamic_thermolysis();
 };
 
 #endif // SIMULATION_HPP

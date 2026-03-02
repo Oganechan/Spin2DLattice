@@ -26,6 +26,7 @@ class SwendsenWangBase : public ISwendsenWang {
   protected:
     lattice::Atoms &atoms_;
     const physics::Calculator &calculator_;
+    Random &rng_ = thread_local_random();
 
   public:
     SwendsenWangBase(lattice::Atoms &atoms,
@@ -63,7 +64,7 @@ class SwendsenWangIsing : public SwendsenWangBase {
     std::vector<int32_t> rank_;
 
     std::array<double, 3> generate_random_direction() {
-        return {0.0, 0.0, Random::bernoulli(0.5) ? 1.0 : -1.0};
+        return {0.0, 0.0, rng_.bernoulli(0.5) ? 1.0 : -1.0};
     }
 
     int32_t find(int32_t atom_id) {
@@ -127,7 +128,7 @@ class SwendsenWangIsing : public SwendsenWangBase {
                                        calculator_.get_temperature());
                     p_bond = std::max(0.0, std::min(1.0, p_bond));
 
-                    if (Random::bernoulli(p_bond))
+                    if (rng_.bernoulli(p_bond))
                         unite(atom_id, neighbor_id);
                 }
             }
@@ -143,7 +144,7 @@ class SwendsenWangIsing : public SwendsenWangBase {
         }
 
         for (auto &[root, cluster_atoms] : cluster_map) {
-            if (Random::bernoulli()) {
+            if (rng_.bernoulli()) {
                 for (int32_t atom_id : cluster_atoms)
                     flip_spin(atom_id, random_dir);
             }
@@ -178,7 +179,7 @@ class SwendsenWangXY : public SwendsenWangBase {
     std::vector<int32_t> rank_;
 
     std::array<double, 3> generate_random_direction() {
-        double phi = Random::uniform_real(0.0, 2.0 * M_PI);
+        double phi = rng_.uniform_real(0.0, 2.0 * M_PI);
         return {std::cos(phi), std::sin(phi), 0.0};
     }
 
@@ -243,7 +244,7 @@ class SwendsenWangXY : public SwendsenWangBase {
                                        calculator_.get_temperature());
                     p_bond = std::max(0.0, std::min(1.0, p_bond));
 
-                    if (Random::bernoulli(p_bond))
+                    if (rng_.bernoulli(p_bond))
                         unite(atom_id, neighbor_id);
                 }
             }
@@ -259,7 +260,7 @@ class SwendsenWangXY : public SwendsenWangBase {
         }
 
         for (auto &[root, cluster_atoms] : cluster_map) {
-            if (Random::bernoulli()) {
+            if (rng_.bernoulli()) {
                 for (int32_t atom_id : cluster_atoms)
                     flip_spin(atom_id, random_dir);
             }
@@ -299,8 +300,8 @@ class SwendsenWangHeisenberg : public SwendsenWangBase {
     std::vector<int32_t> rank_;
 
     std::array<double, 3> generate_random_direction() {
-        double phi = Random::uniform_real(0.0, 2.0 * M_PI);
-        double theta = Random::uniform_real(0.0, M_PI);
+        double phi = rng_.uniform_real(0.0, 2.0 * M_PI);
+        double theta = rng_.uniform_real(0.0, M_PI);
         double sin_theta = std::sin(theta);
 
         return {std::cos(phi) * sin_theta, std::sin(phi) * sin_theta,
@@ -368,7 +369,7 @@ class SwendsenWangHeisenberg : public SwendsenWangBase {
                                        calculator_.get_temperature());
                     p_bond = std::max(0.0, std::min(1.0, p_bond));
 
-                    if (Random::bernoulli(p_bond))
+                    if (rng_.bernoulli(p_bond))
                         unite(atom_id, neighbor_id);
                 }
             }
@@ -384,7 +385,7 @@ class SwendsenWangHeisenberg : public SwendsenWangBase {
         }
 
         for (auto &[root, cluster_atoms] : cluster_map) {
-            if (Random::bernoulli()) {
+            if (rng_.bernoulli()) {
                 for (int32_t atom_id : cluster_atoms)
                     flip_spin(atom_id, random_dir);
             }

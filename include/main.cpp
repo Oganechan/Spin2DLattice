@@ -1,12 +1,9 @@
 #include "../external/argparse/argparse.hpp"
 #include "core/simulation.hpp"
-#include "utils/random.hpp"
 #include <iostream>
 #include <string>
 
 int main(int argc, char *argv[]) {
-    Random::initialize_thread_based();
-
     argparse::ArgumentParser program("Spin_2D_Lattice");
     program.add_argument("config").default_value("../data/input/default.json");
     program.add_argument("-o", "--output").default_value("../data/output");

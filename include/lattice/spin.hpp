@@ -21,11 +21,14 @@ class BaseSpin {
     virtual double dot_product(const std::array<double, 3> &other) const = 0;
 
     virtual ~BaseSpin() = default;
+
+  protected:
+    Random &rng_ = thread_local_random();
 };
 
 class IsingSpin : public BaseSpin {
   public:
-    void randomize() override { value_ = Random::bernoulli(0.5) ? 1 : -1; }
+    void randomize() override { value_ = rng_.bernoulli(0.5) ? 1 : -1; }
     void replace(const BaseSpin &other) override {
         value_ = dynamic_cast<const IsingSpin &>(other).value_;
     }
@@ -48,7 +51,7 @@ class IsingSpin : public BaseSpin {
 
 class XYSpin : public BaseSpin {
   public:
-    void randomize() override { phi_ = Random::uniform_real(0.0, 2.0 * M_PI); }
+    void randomize() override { phi_ = rng_.uniform_real(0.0, 2.0 * M_PI); }
     void replace(const BaseSpin &other) override {
         phi_ = dynamic_cast<const XYSpin &>(other).phi_;
     }
@@ -72,8 +75,8 @@ class XYSpin : public BaseSpin {
 class HeisenbergSpin : public BaseSpin {
   public:
     void randomize() override {
-        phi_ = Random::uniform_real(0.0, 2.0 * M_PI);
-        theta_ = Random::uniform_real(0.0, M_PI);
+        phi_ = rng_.uniform_real(0.0, 2.0 * M_PI);
+        theta_ = rng_.uniform_real(0.0, M_PI);
     }
     void replace(const BaseSpin &other) override {
         const auto &other_heisenberg =

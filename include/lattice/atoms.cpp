@@ -43,7 +43,7 @@ void lattice::Atoms::set_random_defects(double defect_concentration) {
 
     // Fisher–Yates shuffle
     for (int32_t i = atom_count - 1; i > 0; --i) {
-        int32_t j = Random::uniform_int(0, i);
+        int32_t j = rng_.uniform_int(0, i);
         std::swap(atom_indices[i], atom_indices[j]);
     }
 

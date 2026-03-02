@@ -1,51 +1,57 @@
 #ifndef RANDOM_HPP
 #define RANDOM_HPP
 
-#include <chrono>
-#include <omp.h>
+#include <cstdint>
 #include <random>
-#include <thread>
-
+#include <stdexcept>
+#include <type_traits>
 class Random {
   public:
-    static std::mt19937 &get_rng() {
-        thread_local std::mt19937 rng = []() {
-            std::random_device rd;
-            return std::mt19937(rd());
-        }();
-        return rng;
-    }
+    Random(const Random &) = delete;
+    Random &operator=(const Random &) = delete;
+    Random(Random &&) = default;
+    Random &operator=(Random &&) = default;
 
-    static void initialize() {
-        std::random_device rd;
-        get_rng().seed(rd());
-    }
+    explicit Random() { reseed(); }
+    explicit Random(uint32_t sd) : engine_(sd) {}
 
-    static void initialize(uint32_t seed) { get_rng().seed(seed); }
-
-    static void initialize_thread_based() {
-        auto seed = std::hash<std::thread::id>{}(std::this_thread::get_id()) ^
-                    std::chrono::steady_clock::now().time_since_epoch().count();
-        get_rng().seed(seed);
-    }
-
-    template <typename T> static T uniform_real(T min = 0.0, T max = 1.0) {
-        std::uniform_real_distribution<T> dist(min, max);
-        return dist(get_rng());
-    }
-
-    template <typename T> static T uniform_int(T min, T max) {
+    template <typename T> T uniform_int(T min, T max) {
+        static_assert(std::is_integral<T>::value);
         std::uniform_int_distribution<T> dist(min, max);
-        return dist(get_rng());
+        return dist(engine_);
     }
 
-    static bool bernoulli(double p = 0.5) {
+    template <typename T> T uniform_real(T min, T max) {
+        static_assert(std::is_floating_point<T>::value);
+        std::uniform_real_distribution<T> dist(min, max);
+        return dist(engine_);
+    }
+
+    bool bernoulli(double p = 0.5) {
+        if (p < 0.0 || p > 1.0)
+            throw std::out_of_range("");
         std::bernoulli_distribution dist(p);
-        return dist(get_rng());
+        return dist(engine_);
     }
 
   private:
-    static std::mt19937 rng;
+    std::mt19937 engine_;
+
+    void reseed() {
+        std::random_device rd;
+        engine_.seed(rd());
+    }
+    void reseed(uint32_t sd) { engine_.seed(sd); }
 };
+
+inline Random &thread_local_random() {
+    thread_local Random rng;
+    return rng;
+}
+
+inline Random &thread_local_random(uint32_t sd) {
+    thread_local Random rng(sd);
+    return rng;
+}
 
 #endif // RANDOM_HPP
