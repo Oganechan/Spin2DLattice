@@ -72,8 +72,8 @@ class Atoms {
     }
 
     // Returns random magnetic atom
-    inline int32_t select_random_magnetic_atom() const {
-        return magnetic_atoms_[rng_.uniform_int<int32_t>(
+    inline int32_t select_random_magnetic_atom() {
+        return magnetic_atoms_[rng().uniform_int<int32_t>(
             0, magnetic_atoms_.size() - 1)];
     }
 
@@ -86,7 +86,7 @@ class Atoms {
   private:
     const Geometry geometry_;
     const SpinModel spin_model_;
-    Random &rng_ = thread_local_random();
+    Random &rng() { return thread_local_random(); }
 
     std::vector<std::unique_ptr<BaseSpin>> spins_;
     std::vector<bool> magnetic_mask_;
