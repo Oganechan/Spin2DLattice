@@ -33,10 +33,10 @@ bash ./script/build_plots.sh ./data
 ```json
 {
     "lattice": {
-        "system_size": 12,
+        "system_size": 16,
         "lattice_constant_a": 1.0,
         "lattice_constant_b": 1.0,
-        "crystal_type": "triangular",
+        "crystal_type": "rectangular",
         "boundary_type": "periodic"
     },
     "physical": {
@@ -54,11 +54,12 @@ bash ./script/build_plots.sh ./data
         "concentration": 1.0
     },
     "simulation": {
-        "number_measures": 100,
+        "number_measures": 10000,
+        "number_therms": 50000
         "scan_type": "temperature",
-        "scan_start": 0.01,
-        "scan_step": 0.02,
-        "scan_end": 1.0
+        "scan_start": 0.0,
+        "scan_step": 0.01,
+        "scan_end": 5.0
     }
 }
 ```
