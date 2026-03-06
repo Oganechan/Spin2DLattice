@@ -17,6 +17,7 @@ namespace algorithm {
 class ISwendsenWang {
   public:
     virtual ~ISwendsenWang() = default;
+
     virtual void step() = 0;
     virtual void sweep() = 0;
     virtual void sweep(int32_t step_count) = 0;
@@ -50,7 +51,7 @@ class SwendsenWangBase : public ISwendsenWang {
 class SwendsenWangIsing : public SwendsenWangBase {
   public:
     SwendsenWangIsing(lattice::Atoms &atoms,
-                      const physics::Calculator calculator)
+                      const physics::Calculator &calculator)
         : SwendsenWangBase(atoms, calculator) {}
 
     void step() override {
@@ -143,21 +144,22 @@ class SwendsenWangIsing : public SwendsenWangBase {
             cluster_map[root].push_back(atom_id);
         }
 
-        for (auto &[root, cluster_atoms] : cluster_map) {
-            if (rng_.bernoulli()) {
+        for (auto &[root, cluster_atoms] : cluster_map)
+            if (rng_.bernoulli())
                 for (int32_t atom_id : cluster_atoms)
                     flip_spin(atom_id, random_dir);
-            }
-        }
     }
 
     void flip_spin(int32_t atom_id, const std::array<double, 3> &dir) {
         const auto &spin = atoms_.get_spin(atom_id);
         const auto components = spin.get_components();
-        std::array<double, 3> new_components = {0.0, 0.0, -components[2]};
 
-        std::unique_ptr<lattice::BaseSpin> new_spin =
-            atoms_.generate_random_spin();
+        double dot = components[2] * dir[2];
+
+        std::array<double, 3> new_components = {
+            0.0, 0.0, components[2] - 2.0 * dot * dir[2]};
+
+        auto new_spin = atoms_.generate_random_spin();
         new_spin->replace(new_components);
         atoms_.set_spin(atom_id, *new_spin);
     }
@@ -259,12 +261,10 @@ class SwendsenWangXY : public SwendsenWangBase {
             cluster_map[root].push_back(atom_id);
         }
 
-        for (auto &[root, cluster_atoms] : cluster_map) {
-            if (rng_.bernoulli()) {
+        for (auto &[root, cluster_atoms] : cluster_map)
+            if (rng_.bernoulli())
                 for (int32_t atom_id : cluster_atoms)
                     flip_spin(atom_id, random_dir);
-            }
-        }
     }
 
     void flip_spin(int32_t atom_id, const std::array<double, 3> &dir) {
@@ -276,8 +276,7 @@ class SwendsenWangXY : public SwendsenWangBase {
             components[0] - 2.0 * dot * dir[0],
             components[1] - 2.0 * dot * dir[1], 0.0};
 
-        std::unique_ptr<lattice::BaseSpin> new_spin =
-            atoms_.generate_random_spin();
+        auto new_spin = atoms_.generate_random_spin();
         new_spin->replace(new_components);
         atoms_.set_spin(atom_id, *new_spin);
     }
@@ -403,8 +402,7 @@ class SwendsenWangHeisenberg : public SwendsenWangBase {
             components[1] - 2.0 * dot * dir[1],
             components[2] - 2.0 * dot * dir[2]};
 
-        std::unique_ptr<lattice::BaseSpin> new_spin =
-            atoms_.generate_random_spin();
+        auto new_spin = atoms_.generate_random_spin();
         new_spin->replace(new_components);
         atoms_.set_spin(atom_id, *new_spin);
     }
