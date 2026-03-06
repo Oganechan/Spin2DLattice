@@ -10,6 +10,7 @@ Simulation::Simulation(const Config &config, const std::string &base_output_dir)
       base_output_dir_(base_output_dir),
       data_(calculator_, config, base_output_dir),
       number_measures_(config.get<int32_t>("simulation.number_measures")),
+      number_therms_(config.get<int32_t>("simulation.number_therms")),
       scan_type_(config.get<std::string>("simulation.scan_type")),
       scan_start_(config.get<double>("simulation.scan_start")),
       scan_step_(config.get<double>("simulation.scan_step")),
@@ -40,7 +41,7 @@ void Simulation::run() {
 
 void Simulation::run_single_simulation() {
 
-    swendsenwang_->sweep(15000);
+    swendsenwang_->sweep(number_therms_);
 
     for (int32_t measure = 0; measure < number_measures_; ++measure) {
         swendsenwang_->sweep(10);

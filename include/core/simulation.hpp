@@ -23,7 +23,7 @@ class Simulation {
 
     const std::string base_output_dir_;
 
-    const int32_t number_measures_;
+    const int32_t number_measures_, number_therms_;
     const std::string scan_type_;
     const double scan_start_, scan_step_, scan_end_;
 
