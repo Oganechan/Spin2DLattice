@@ -23,7 +23,7 @@ cmake -S .. -B . && make
 
 ### Plots builing
 ```bash
-bash ./script/build_plots.sh ./data
+bash ./script/build_plots.sh <data_directory_path>
 ```
 
 ## Configuration example
