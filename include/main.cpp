@@ -1,5 +1,6 @@
 #include "../external/argparse/argparse.hpp"
 #include "core/simulation.hpp"
+#include <cstdlib>
 #include <iostream>
 #include <string>
 
@@ -13,7 +14,7 @@ int main(int argc, char *argv[]) {
     } catch (const std::exception &err) {
         std::cerr << err.what() << std::endl;
         std::cerr << program;
-        return 1;
+        return EXIT_FAILURE;
     }
 
     try {
@@ -27,8 +28,8 @@ int main(int argc, char *argv[]) {
         simulation.run();
     } catch (const std::exception &e) {
         std::cerr << "Error: " << e.what() << std::endl;
-        return 1;
+        return EXIT_FAILURE;
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
