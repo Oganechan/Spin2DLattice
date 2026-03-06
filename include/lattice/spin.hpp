@@ -5,7 +5,6 @@
 #include "types.hpp"
 #include <array>
 #include <cmath>
-#include <cstdint>
 #include <memory>
 #include <stdexcept>
 
@@ -23,20 +22,20 @@ class BaseSpin {
     virtual ~BaseSpin() = default;
 
   protected:
-    Random &rng_ = thread_local_random();
-};
+    Random &rng() { return thread_local_random(); }
+}; // namespace lattice
 
 class IsingSpin : public BaseSpin {
   public:
-    void randomize() override { value_ = rng_.bernoulli(0.5) ? 1 : -1; }
+    void randomize() override { value_ = rng().bernoulli(0.5) ? 1.0 : -1.0; }
     void replace(const BaseSpin &other) override {
         value_ = dynamic_cast<const IsingSpin &>(other).value_;
     }
     void replace(const std::array<double, 3> &other) override {
-        value_ = other[2] > 0 ? 1 : -1;
+        value_ = other[2] > 0 ? 1.0 : (other[2] < 0 ? -1.0 : value_);
     }
     std::array<double, 3> get_components() const override {
-        return {0.0, 0.0, double(value_)};
+        return {0.0, 0.0, value_};
     }
     double dot_product(const BaseSpin &other) const override {
         return value_ * dynamic_cast<const IsingSpin &>(other).value_;
@@ -46,12 +45,12 @@ class IsingSpin : public BaseSpin {
     }
 
   private:
-    int32_t value_;
+    double value_;
 };
 
 class XYSpin : public BaseSpin {
   public:
-    void randomize() override { phi_ = rng_.uniform_real(0.0, 2.0 * M_PI); }
+    void randomize() override { phi_ = rng().uniform_real(0.0, 2.0 * M_PI); }
     void replace(const BaseSpin &other) override {
         phi_ = dynamic_cast<const XYSpin &>(other).phi_;
     }
@@ -75,8 +74,8 @@ class XYSpin : public BaseSpin {
 class HeisenbergSpin : public BaseSpin {
   public:
     void randomize() override {
-        phi_ = rng_.uniform_real(0.0, 2.0 * M_PI);
-        theta_ = rng_.uniform_real(0.0, M_PI);
+        phi_ = rng().uniform_real(0.0, 2.0 * M_PI);
+        theta_ = rng().uniform_real(0.0, M_PI);
     }
     void replace(const BaseSpin &other) override {
         const auto &other_heisenberg =
