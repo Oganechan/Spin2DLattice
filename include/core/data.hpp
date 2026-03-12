@@ -16,6 +16,7 @@ class Data {
                   const std::string &base_output_dir);
 
     void measure();
+    void save_snapshot() const;
     void save_statistics();
     void save_finale();
 

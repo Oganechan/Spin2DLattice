@@ -46,6 +46,8 @@ void Simulation::run_single_simulation() {
     for (int32_t measure = 0; measure < number_measures_; ++measure) {
         swendsenwang_->sweep(10);
         data_.measure();
+        if (measure % (number_measures_ / 10) == 0)
+            data_.save_snapshot();
     }
 
     data_.save_statistics();

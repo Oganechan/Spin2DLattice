@@ -247,6 +247,36 @@ void Data::save_neighbor_table() const {
     file.close();
 }
 
+void Data::save_snapshot() const {
+    static int32_t num = 0;
+    double T = calculator_.get_temperature();
+
+    std::string filename =
+        "snap_T" + std::to_string(T) + "_step" + std::to_string(++num) + ".csv";
+    fs::path snapshot_file = output_dir_ / "snapshots" / filename;
+
+    std::ofstream file(snapshot_file);
+    file << "atom_id,x,y,ux,uy,uz\n";
+
+    const auto &atoms = calculator_.get_atoms();
+    const auto &geometry = atoms.get_geometry();
+
+    for (int32_t i = 0; i < geometry.get_atom_count(); ++i) {
+        auto [x, y] = geometry.get_atom_position(i);
+        double ux = 0.0, uy = 0.0, uz = 0.0;
+        if (atoms.get_magnetic_state(i)) {
+            auto spin_components = atoms.get_spin(i).get_components();
+            ux = spin_components[0];
+            uy = spin_components[1];
+            uz = spin_components[2];
+        }
+        file << i << "," << x << "," << y << "," << ux << "," << uy << "," << uz
+             << "\n";
+    }
+
+    file.close();
+}
+
 std::string Data::format_double(double value, int precision) const {
     std::ostringstream oss;
     oss << std::scientific << std::setprecision(precision) << value;
