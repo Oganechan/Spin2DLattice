@@ -86,6 +86,7 @@ class Atoms {
   private:
     const Geometry geometry_;
     const SpinModel spin_model_;
+    const double spin_value_;
     Random &rng() { return thread_local_random(); }
 
     std::vector<std::unique_ptr<BaseSpin>> spins_;

@@ -23,16 +23,21 @@ class BaseSpin {
 
   protected:
     Random &rng() { return thread_local_random(); }
-}; // namespace lattice
+};
 
 class IsingSpin : public BaseSpin {
   public:
-    void randomize() override { value_ = rng().bernoulli(0.5) ? 1.0 : -1.0; }
+    explicit IsingSpin(double spin_value) : spin_value_(spin_value) {}
+
+    void randomize() override {
+        value_ = rng().bernoulli(0.5) ? spin_value_ : -spin_value_;
+    }
     void replace(const BaseSpin &other) override {
         value_ = dynamic_cast<const IsingSpin &>(other).value_;
     }
     void replace(const std::array<double, 3> &other) override {
-        value_ = other[2] > 0 ? 1.0 : (other[2] < 0 ? -1.0 : value_);
+        value_ =
+            other[2] > 0 ? spin_value_ : (other[2] < 0 ? -spin_value_ : value_);
     }
     std::array<double, 3> get_components() const override {
         return {0.0, 0.0, value_};
@@ -46,10 +51,13 @@ class IsingSpin : public BaseSpin {
 
   private:
     double value_;
+    const double spin_value_;
 };
 
 class XYSpin : public BaseSpin {
   public:
+    explicit XYSpin(double spin_value) : spin_value_(spin_value) {}
+
     void randomize() override { phi_ = rng().uniform_real(0.0, 2.0 * M_PI); }
     void replace(const BaseSpin &other) override {
         phi_ = dynamic_cast<const XYSpin &>(other).phi_;
@@ -58,48 +66,61 @@ class XYSpin : public BaseSpin {
         phi_ = std::atan2(other[1], other[0]);
     }
     std::array<double, 3> get_components() const override {
-        return {std::cos(phi_), std::sin(phi_), 0.0};
+        return {spin_value_ * std::cos(phi_), spin_value_ * std::sin(phi_),
+                0.0};
     }
     double dot_product(const BaseSpin &other) const override {
-        return std::cos(phi_ - dynamic_cast<const XYSpin &>(other).phi_);
+        return spin_value_ *
+               std::cos(phi_ - dynamic_cast<const XYSpin &>(other).phi_);
     }
     double dot_product(const std::array<double, 3> &other) const override {
-        return std::cos(phi_) * other[0] + std::sin(phi_) * other[1];
+        return spin_value_ * std::cos(phi_) * other[0] +
+               spin_value_ * std::sin(phi_) * other[1];
     }
 
   private:
     double phi_;
+    const double spin_value_;
 };
 
 class HeisenbergSpin : public BaseSpin {
   public:
+    explicit HeisenbergSpin(double spin_value) : spin_value_(spin_value) {}
+
     void randomize() override {
         phi_ = rng().uniform_real(0.0, 2.0 * M_PI);
         theta_ = rng().uniform_real(0.0, M_PI);
     }
+
     void replace(const BaseSpin &other) override {
         const auto &other_heisenberg =
             dynamic_cast<const HeisenbergSpin &>(other);
         phi_ = other_heisenberg.phi_;
         theta_ = other_heisenberg.theta_;
     }
+
     void replace(const std::array<double, 3> &other) override {
         phi_ = std::atan2(other[1], other[0]);
         theta_ = std::atan2(
             std::sqrt(other[0] * other[0] + other[1] * other[1]), other[2]);
     }
+
     std::array<double, 3> get_components() const override {
         const double sin_theta = std::sin(theta_);
 
-        return {sin_theta * std::cos(phi_), sin_theta * std::sin(phi_),
-                std::cos(theta_)};
+        return {spin_value_ * sin_theta * std::cos(phi_),
+                spin_value_ * sin_theta * std::sin(phi_),
+                spin_value_ * std::cos(theta_)};
     }
     double dot_product(const BaseSpin &other) const override {
-        const auto spin1 = get_components();
-        const auto spin2 =
-            dynamic_cast<const HeisenbergSpin &>(other).get_components();
+        const auto &other_heisenberg =
+            dynamic_cast<const HeisenbergSpin &>(other);
+        double cos_angle = std::cos(phi_ - other_heisenberg.phi_) *
+                               std::sin(theta_) *
+                               std::sin(other_heisenberg.theta_) +
+                           std::cos(theta_) * std::cos(other_heisenberg.theta_);
 
-        return spin1[0] * spin2[0] + spin1[1] * spin2[1] + spin1[2] * spin2[2];
+        return spin_value_ * spin_value_ * cos_angle;
     }
     double dot_product(const std::array<double, 3> &other) const override {
         const auto components = get_components();
@@ -109,18 +130,20 @@ class HeisenbergSpin : public BaseSpin {
 
   private:
     double phi_, theta_;
+    const double spin_value_;
 };
 
 class SpinFactory {
   public:
-    static std::unique_ptr<BaseSpin> create(SpinModel model) {
+    static std::unique_ptr<BaseSpin> create(SpinModel model,
+                                            double spin_value) {
         switch (model) {
         case SpinModel::ISING:
-            return std::make_unique<IsingSpin>();
+            return std::make_unique<IsingSpin>(spin_value);
         case SpinModel::XY:
-            return std::make_unique<XYSpin>();
+            return std::make_unique<XYSpin>(spin_value);
         case SpinModel::HEISENBERG:
-            return std::make_unique<HeisenbergSpin>();
+            return std::make_unique<HeisenbergSpin>(spin_value);
         default:
             throw std::invalid_argument("Unknown spin model");
         }
