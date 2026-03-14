@@ -251,8 +251,10 @@ void Data::save_snapshot() const {
     static int32_t num = 0;
     double T = calculator_.get_temperature();
 
+    std::ostringstream ss;
+    ss << std::fixed << std::setprecision(2) << T;
     std::string filename =
-        "snap_T" + std::to_string(T) + "_step" + std::to_string(++num) + ".csv";
+        "snap_T" + ss.str() + "_step" + std::to_string(++num) + ".csv";
     fs::path snapshot_file = output_dir_ / "snapshots" / filename;
 
     std::ofstream file(snapshot_file);
@@ -273,7 +275,7 @@ void Data::save_snapshot() const {
         file << i << "," << x << "," << y << "," << ux << "," << uy << "," << uz
              << "\n";
     }
-
+    file.flush();
     file.close();
 }
 
